@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { dogs } from '@/lib/schema'
-import { put } from '@vercel/blob'
+import { put, del } from '@vercel/blob'
 import { eq } from 'drizzle-orm'
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +21,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   let imageUrl = (formData.get('imageUrl') as string) || ''
 
   if (file && file.size > 0) {
+    const db = getDb()
+    const [current] = await db.select({ imageUrl: dogs.imageUrl }).from(dogs).where(eq(dogs.id, parseInt(id)))
+    if (current?.imageUrl?.includes('vercel-storage.com') || current?.imageUrl?.includes('public.blob.vercel-storage')) {
+      await del(current.imageUrl)
+    }
+
     const ext = file.name.split('.').pop()
     const { url } = await put(`dogs/${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.${ext}`, file, {
       access: 'public',
@@ -41,6 +47,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const db = getDb()
+
+  const [dog] = await db.select({ imageUrl: dogs.imageUrl }).from(dogs).where(eq(dogs.id, parseInt(id)))
+
   await db.delete(dogs).where(eq(dogs.id, parseInt(id)))
+
+  if (dog?.imageUrl?.includes('vercel-storage.com') || dog?.imageUrl?.includes('public.blob.vercel-storage')) {
+    await del(dog.imageUrl)
+  }
+
   return NextResponse.json({ success: true })
 }
