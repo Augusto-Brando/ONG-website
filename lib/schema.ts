@@ -10,6 +10,7 @@ export const dogs = pgTable('dogs', {
   observations: text('observations'),
   imageUrl: text('image_url').notNull().default(''),
   color: text('color').notNull().default('#F97316'),
+  images: text('images').array().default([]),
   available: boolean('available').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
