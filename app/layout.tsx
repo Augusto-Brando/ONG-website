@@ -8,24 +8,11 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Patinhas - ONG de Resgate de Cães',
-  description: 'Encontre seu novo melhor amigo. Adote um cão resgatado e dê uma segunda chance.',
-  generator: 'v0.app',
+  title: 'Amor não tem Raça - Adoção de Animais',
+  description: 'Conheça animais disponíveis para adoção e ajude a ONG Amor não tem Raça.',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    shortcut: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
     apple: '/apple-icon.png',
   },
 }
@@ -37,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased">
         {children}
         <Toaster richColors position="top-right" />
         <Analytics />

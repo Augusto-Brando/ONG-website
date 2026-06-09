@@ -1,4 +1,4 @@
-import { PawPrint } from 'lucide-react'
+import { Instagram, Mail, PawPrint, Phone } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -11,31 +11,60 @@ export default function Footer() {
               <span className="font-bold text-lg">Patinhas</span>
             </div>
             <p className="text-primary-foreground/80">
-              Dando segunda chance aos cães que mais precisam.
+              Dando segunda chance aos animais que mais precisam.
             </p>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">Links Rápidos</h4>
             <ul className="space-y-2 text-primary-foreground/80">
-              <li><a href="#dogs" className="hover:text-primary-foreground transition">Cães para Adoção</a></li>
+              <li><a href="#dogs" className="hover:text-primary-foreground transition">Animais para Adoção</a></li>
               <li><a href="#about" className="hover:text-primary-foreground transition">Sobre Nós</a></li>
+              <li><a href="#donations" className="hover:text-primary-foreground transition">Doações</a></li>
               <li><a href="#contact" className="hover:text-primary-foreground transition">Contato</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Redes Sociais</h4>
+            <h4 className="font-semibold mb-4">Contato</h4>
             <ul className="space-y-2 text-primary-foreground/80">
-              <li><a href="#" className="hover:text-primary-foreground transition">Instagram</a></li>
-              <li><a href="#" className="hover:text-primary-foreground transition">Facebook</a></li>
-              <li><a href="#" className="hover:text-primary-foreground transition">WhatsApp</a></li>
+              <li>
+                <a
+                  href="https://www.instagram.com/amornaotemracajf/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 hover:text-primary-foreground transition"
+                >
+                  <Instagram className="w-4 h-4" />
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://wa.me/5532999611971"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 hover:text-primary-foreground transition"
+                >
+                  <Phone className="w-4 h-4" />
+                  +55 32 99961-1971
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:amornaotemracajf@gmail.com"
+                  className="inline-flex items-center gap-2 hover:text-primary-foreground transition"
+                >
+                  <Mail className="w-4 h-4" />
+                  amornaotemracajf@gmail.com
+                </a>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-primary-foreground/20 pt-8 text-center text-primary-foreground/60">
-          <p>&copy; 2025 Patinhas ONG. Todos os direitos reservados. ❤️</p>
+          <p>&copy; 2025 Amor não tem Raça. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

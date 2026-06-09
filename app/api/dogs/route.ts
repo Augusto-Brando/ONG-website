@@ -4,6 +4,8 @@ import { dogs } from '@/lib/schema'
 import { put } from '@vercel/blob'
 import { asc } from 'drizzle-orm'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const db = getDb()
   const all = await db.select().from(dogs).orderBy(asc(dogs.createdAt))

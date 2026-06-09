@@ -2,9 +2,12 @@ import DogCarousel from '@/components/dog-carousel'
 import DogCatalog from '@/components/dog-catalog'
 import Header from '@/components/header'
 import AboutSection from '@/components/about-section'
+import DonationSection from '@/components/donation-section'
 import ContactSection from '@/components/contact-section'
 import Footer from '@/components/footer'
 import type { Dog } from '@/lib/schema'
+
+export const dynamic = 'force-dynamic'
 
 async function getDogs(): Promise<Dog[]> {
   if (!process.env.DATABASE_URL) return []
@@ -27,6 +30,7 @@ export default async function Home() {
       <DogCarousel dogs={dogs} />
       <DogCatalog dogs={dogs} />
       <AboutSection />
+      <DonationSection />
       <ContactSection />
       <Footer />
     </main>

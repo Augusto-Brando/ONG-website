@@ -99,7 +99,7 @@ export default function AdminPage() {
     const res = await fetch(url, { method, body: fd })
 
     if (res.ok) {
-      toast.success(editing ? 'Cachorro atualizado!' : 'Cachorro cadastrado!')
+      toast.success(editing ? 'Animal atualizado!' : 'Animal cadastrado!')
       setOpen(false)
       fetchDogs()
     } else {
@@ -112,7 +112,7 @@ export default function AdminPage() {
   async function handleDelete(id: number) {
     const res = await fetch(`/api/dogs/${id}`, { method: 'DELETE' })
     if (res.ok) {
-      toast.success('Cachorro removido.')
+      toast.success('Animal removido.')
       setDogs((prev) => prev.filter((d) => d.id !== id))
     } else {
       toast.error('Erro ao remover.')
@@ -153,7 +153,7 @@ export default function AdminPage() {
       {/* Content */}
       <main className="container mx-auto px-4 md:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Cachorros Cadastrados</h1>
+          <h1 className="text-2xl font-bold text-foreground">Animais Cadastrados</h1>
           <p className="text-sm text-muted-foreground mt-1">{dogs.length} animal(is) no cadastro</p>
         </div>
 
@@ -162,7 +162,7 @@ export default function AdminPage() {
         ) : dogs.length === 0 ? (
           <div className="text-center py-20 space-y-4">
             <PawPrint className="w-12 h-12 mx-auto text-muted-foreground/40" />
-            <p className="text-muted-foreground">Nenhum cachorro cadastrado ainda.</p>
+            <p className="text-muted-foreground">Nenhum animal cadastrado ainda.</p>
             <Button onClick={openCreate} variant="outline" className="gap-2">
               <Plus className="w-4 h-4" /> Cadastrar primeiro
             </Button>
@@ -248,7 +248,7 @@ export default function AdminPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar Cachorro' : 'Novo Cachorro'}</DialogTitle>
+            <DialogTitle>{editing ? 'Editar Animal' : 'Novo Animal'}</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSave} className="space-y-4 pt-2">
@@ -260,7 +260,7 @@ export default function AdminPage() {
                 onClick={() => fileRef.current?.click()}
               >
                 {photoPreview ? (
-                  <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
+                  <img src={photoPreview} alt="preview" className="w-full h-full object-contain" />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
                     <PawPrint className="w-8 h-8" />
