@@ -74,8 +74,8 @@ export default function ContactSection() {
                 asChild
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 font-semibold"
               >
-                <a href="https://www.instagram.com/amornaotemracajf/" target="_blank" rel="noopener noreferrer">
-                  Agendar Visita
+                <a href={`https://wa.me/5532999611971?text=${encodeURIComponent('Olá! Gostaria de agendar uma visita ao abrigo para conhecer os animais. 🐾')}`} target="_blank" rel="noopener noreferrer">
+                  Agendar Visita via WhatsApp
                 </a>
               </Button>
               <Button
