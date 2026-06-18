@@ -4,6 +4,32 @@ import { dogs } from '@/lib/schema'
 import { put } from '@vercel/blob'
 import { asc } from 'drizzle-orm'
 
+export const dynamic = 'force-dynamic'
+
+function slugify(name: string) {
+  return name.toLowerCase().replace(/\s+/g, '-')
+}
+
+function getUploadFiles(formData: FormData): File[] {
+  const files: File[] = []
+  for (const f of formData.getAll('photos')) {
+    if (f instanceof File && f.size > 0) files.push(f)
+  }
+  const legacy = formData.get('photo')
+  if (legacy instanceof File && legacy.size > 0) files.push(legacy)
+  return files
+}
+
+function parseExistingImages(formData: FormData): string[] {
+  try {
+    const raw = (formData.get('existingImages') as string) || '[]'
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr.filter((u) => typeof u === 'string' && u) : []
+  } catch {
+    return []
+  }
+}
+
 export async function GET() {
   const db = getDb()
   const all = await db.select().from(dogs).orderBy(asc(dogs.createdAt))
@@ -21,22 +47,28 @@ export async function POST(req: Request) {
   const observations = (formData.get('observations') as string) || null
   const color = (formData.get('color') as string) || '#F97316'
   const available = formData.get('available') !== 'false'
-  const file = formData.get('photo') as File | null
 
-  let imageUrl = (formData.get('imageUrl') as string) || ''
+  const existingImages = parseExistingImages(formData)
 
-  if (file && file.size > 0) {
+  // Novos uploads.
+  const uploadedUrls: string[] = []
+  for (const file of getUploadFiles(formData)) {
     const ext = file.name.split('.').pop()
-    const { url } = await put(`dogs/${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.${ext}`, file, {
+    const { url } = await put(`dogs/${slugify(name)}-${Date.now()}-${uploadedUrls.length}.${ext}`, file, {
       access: 'public',
     })
-    imageUrl = url
+    uploadedUrls.push(url)
   }
+
+  const images = Array.from(new Set([...existingImages, ...uploadedUrls].filter(Boolean)))
+
+  let imageUrl = (formData.get('imageUrl') as string) || ''
+  if (!imageUrl || !images.includes(imageUrl)) imageUrl = images[0] || ''
 
   const db = getDb()
   const [created] = await db
     .insert(dogs)
-    .values({ name, breed, age, weight, description, observations, imageUrl, color, available })
+    .values({ name, breed, age, weight, description, observations, imageUrl, images, color, available })
     .returning()
 
   return NextResponse.json(created, { status: 201 })

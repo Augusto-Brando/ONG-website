@@ -2,9 +2,13 @@ import DogCarousel from '@/components/dog-carousel'
 import DogCatalog from '@/components/dog-catalog'
 import Header from '@/components/header'
 import AboutSection from '@/components/about-section'
+import NewsSection from '@/components/news-section'
+import DonationSection from '@/components/donation-section'
 import ContactSection from '@/components/contact-section'
 import Footer from '@/components/footer'
-import type { Dog } from '@/lib/schema'
+import type { Dog, News } from '@/lib/schema'
+
+export const dynamic = 'force-dynamic'
 
 async function getDogs(): Promise<Dog[]> {
   if (!process.env.DATABASE_URL) return []
@@ -13,13 +17,31 @@ async function getDogs(): Promise<Dog[]> {
     const { dogs } = await import('@/lib/schema')
     const { asc } = await import('drizzle-orm')
     return getDb().select().from(dogs).orderBy(asc(dogs.createdAt))
-  } catch {
+  } catch (e) {
+    console.error('getDogs falhou:', e)
+    return []
+  }
+}
+
+async function getNews(): Promise<News[]> {
+  if (!process.env.DATABASE_URL) return []
+  try {
+    const { getDb } = await import('@/lib/db')
+    const { news } = await import('@/lib/schema')
+    const { desc, eq } = await import('drizzle-orm')
+    return await getDb()
+      .select()
+      .from(news)
+      .where(eq(news.published, true))
+      .orderBy(desc(news.publishedAt))
+  } catch (e) {
+    console.error('getNews falhou:', e)
     return []
   }
 }
 
 export default async function Home() {
-  const dogs = await getDogs()
+  const [dogs, news] = await Promise.all([getDogs(), getNews()])
 
   return (
     <main className="min-h-screen bg-background">
@@ -27,6 +49,8 @@ export default async function Home() {
       <DogCarousel dogs={dogs} />
       <DogCatalog dogs={dogs} />
       <AboutSection />
+      <NewsSection news={news} />
+      <DonationSection />
       <ContactSection />
       <Footer />
     </main>

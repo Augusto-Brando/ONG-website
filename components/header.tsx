@@ -15,13 +15,19 @@ export default function Header() {
             <p className="text-xs text-muted-foreground">ONG de Resgate</p>
           </div>
         </div>
-        
+
         <nav className="hidden md:flex gap-8">
           <a href="#dogs" className="text-sm font-medium hover:text-primary transition-colors">
-            Cães para Adoção
+            Animais para Adoção
           </a>
           <a href="#about" className="text-sm font-medium hover:text-primary transition-colors">
             Sobre Nós
+          </a>
+          <a href="#news" className="text-sm font-medium hover:text-primary transition-colors">
+            Notícias
+          </a>
+          <a href="#donations" className="text-sm font-medium hover:text-primary transition-colors">
+            Doações
           </a>
           <a href="#contact" className="text-sm font-medium hover:text-primary transition-colors">
             Contato

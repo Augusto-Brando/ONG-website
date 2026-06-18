@@ -1,35 +1,110 @@
-# ONG-website
+# Amor nao tem Raca - Landing Page
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Landing page da ONG Amor nao tem Raca para divulgar animais disponiveis para adocao, contatos oficiais, doacoes e cadastro administrativo de animais.
 
-## Built with v0
+## Stack
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+- Next.js 16
+- React 19
+- Tailwind CSS
+- Drizzle ORM
+- Neon/PostgreSQL
+- Vercel Blob para upload de fotos
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_MNZ5lUUJIRgUqEaD99bEhi6bR7p1)
+## Requisitos
 
-## Getting Started
+- Node.js 20 ou superior
+- npm
+- Banco PostgreSQL compativel com Neon
 
-First, run the development server:
+## Variaveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+DATABASE_URL="postgresql://..."
+ADMIN_PASSWORD="sua-senha-do-admin"
+BLOB_READ_WRITE_TOKEN="seu-token-do-vercel-blob"
+```
+
+Observacoes:
+
+- `DATABASE_URL` e obrigatoria para carregar e cadastrar animais.
+- `ADMIN_PASSWORD` protege a area `/admin`.
+- `BLOB_READ_WRITE_TOKEN` e necessario para upload de imagens fora do ambiente configurado da Vercel.
+
+## Como rodar localmente
+
+Instale as dependencias:
+
+```bash
+npm install
+```
+
+Rode o servidor de desenvolvimento:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-## Learn More
+Area administrativa:
 
-To learn more, take a look at the following resources:
+```text
+http://localhost:3000/admin
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+## Scripts principais
 
-<a href="https://v0.app/chat/api/kiro/clone/Augusto-Brando/ONG-website" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+```bash
+npm run dev       # inicia o ambiente local
+npm run build     # gera build de producao
+npm run start     # roda a build de producao
+npm run lint      # executa lint, se as dependencias de lint estiverem configuradas
+```
+
+## Banco de dados
+
+O schema principal esta em `lib/schema.ts`. A tabela usada atualmente se chama `dogs`, mas a interface do site foi ajustada para tratar os registros como animais, pois a ONG tambem trabalha com gatos.
+
+Comandos Drizzle disponiveis:
+
+```bash
+npm run db:generate
+npm run db:migrate
+npm run db:push
+npm run db:studio
+```
+
+## Funcionalidades
+
+- Listagem publica de animais para adocao.
+- Carrossel em formato de card com melhor enquadramento das fotos.
+- Modal de detalhes do animal.
+- Contato por WhatsApp, Instagram e email.
+- Secao de doacoes com chave Pix CNPJ.
+- Informacao para socio contribuinte.
+- Area admin para cadastrar, editar e remover animais.
+- Upload de fotos via Vercel Blob.
+
+## Producao
+
+A home e a rota `/api/dogs` estao configuradas como dinamicas para buscar os animais atualizados no banco em producao:
+
+```ts
+export const dynamic = 'force-dynamic'
+```
+
+Depois de cadastrar novos animais pelo admin, a landing deve refletir os dados do banco sem depender de um novo build.
+
+## Dados atuais da ONG
+
+- Instagram: `https://www.instagram.com/amornaotemracajf/`
+- WhatsApp principal: `+55 32 99961-1971`
+- Email: `amornaotemracajf@gmail.com`
+- Pix CNPJ: `48.118.169/0001-77`

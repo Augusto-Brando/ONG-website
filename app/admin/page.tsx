@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { PawPrint, Plus, Pencil, Trash2, LogOut, X, Check } from 'lucide-react'
+import Link from 'next/link'
+import { PawPrint, Plus, Pencil, Trash2, LogOut, X, Check, Star, ImagePlus, Newspaper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,12 @@ const COLORS = [
   { label: 'Rosa', value: '#EC4899' },
   { label: 'Azul', value: '#06B6D4' },
 ]
+
+function buildImageList(dog: Dog): string[] {
+  return Array.from(
+    new Set([dog.imageUrl, ...((dog.images as string[] | null) ?? [])].filter(Boolean)),
+  )
+}
 
 const emptyForm = {
   name: '',
@@ -38,8 +45,8 @@ export default function AdminPage() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Dog | null>(null)
   const [form, setForm] = useState(emptyForm)
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string>('')
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [newPhotos, setNewPhotos] = useState<{ file: File; preview: string }[]>([])
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -55,8 +62,8 @@ export default function AdminPage() {
   function openCreate() {
     setEditing(null)
     setForm(emptyForm)
-    setPhotoFile(null)
-    setPhotoPreview('')
+    setExistingImages([])
+    setNewPhotos([])
     setOpen(true)
   }
 
@@ -73,16 +80,35 @@ export default function AdminPage() {
       available: dog.available,
       imageUrl: dog.imageUrl,
     })
-    setPhotoFile(null)
-    setPhotoPreview(dog.imageUrl)
+    setExistingImages(buildImageList(dog))
+    setNewPhotos([])
     setOpen(true)
   }
 
-  function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setPhotoFile(file)
-    setPhotoPreview(URL.createObjectURL(file))
+  function handlePhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    setNewPhotos((prev) => [
+      ...prev,
+      ...files.map((file) => ({ file, preview: URL.createObjectURL(file) })),
+    ])
+    e.target.value = ''
+  }
+
+  function removeExisting(url: string) {
+    setExistingImages((prev) => prev.filter((u) => u !== url))
+  }
+
+  function makeCover(url: string) {
+    setExistingImages((prev) => [url, ...prev.filter((u) => u !== url)])
+  }
+
+  function removeNewPhoto(index: number) {
+    setNewPhotos((prev) => {
+      const item = prev[index]
+      if (item) URL.revokeObjectURL(item.preview)
+      return prev.filter((_, i) => i !== index)
+    })
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -91,7 +117,9 @@ export default function AdminPage() {
 
     const fd = new FormData()
     Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)))
-    if (photoFile) fd.append('photo', photoFile)
+    fd.set('existingImages', JSON.stringify(existingImages))
+    fd.set('imageUrl', existingImages[0] ?? '')
+    newPhotos.forEach(({ file }) => fd.append('photos', file))
 
     const url = editing ? `/api/dogs/${editing.id}` : '/api/dogs'
     const method = editing ? 'PUT' : 'POST'
@@ -99,7 +127,7 @@ export default function AdminPage() {
     const res = await fetch(url, { method, body: fd })
 
     if (res.ok) {
-      toast.success(editing ? 'Cachorro atualizado!' : 'Cachorro cadastrado!')
+      toast.success(editing ? 'Animal atualizado!' : 'Animal cadastrado!')
       setOpen(false)
       fetchDogs()
     } else {
@@ -112,7 +140,7 @@ export default function AdminPage() {
   async function handleDelete(id: number) {
     const res = await fetch(`/api/dogs/${id}`, { method: 'DELETE' })
     if (res.ok) {
-      toast.success('Cachorro removido.')
+      toast.success('Animal removido.')
       setDogs((prev) => prev.filter((d) => d.id !== id))
     } else {
       toast.error('Erro ao remover.')
@@ -139,9 +167,14 @@ export default function AdminPage() {
               <p className="text-xs text-muted-foreground">Amor não tem Raça</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Button asChild variant="outline" size="sm" className="gap-2">
+              <Link href="/admin/news">
+                <Newspaper className="w-4 h-4" /> <span className="hidden sm:inline">Notícias</span>
+              </Link>
+            </Button>
             <Button onClick={openCreate} size="sm" className="gap-2">
-              <Plus className="w-4 h-4" /> Adicionar
+              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Adicionar</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair">
               <LogOut className="w-4 h-4" />
@@ -153,7 +186,7 @@ export default function AdminPage() {
       {/* Content */}
       <main className="container mx-auto px-4 md:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Cachorros Cadastrados</h1>
+          <h1 className="text-2xl font-bold text-foreground">Animais Cadastrados</h1>
           <p className="text-sm text-muted-foreground mt-1">{dogs.length} animal(is) no cadastro</p>
         </div>
 
@@ -162,7 +195,7 @@ export default function AdminPage() {
         ) : dogs.length === 0 ? (
           <div className="text-center py-20 space-y-4">
             <PawPrint className="w-12 h-12 mx-auto text-muted-foreground/40" />
-            <p className="text-muted-foreground">Nenhum cachorro cadastrado ainda.</p>
+            <p className="text-muted-foreground">Nenhum animal cadastrado ainda.</p>
             <Button onClick={openCreate} variant="outline" className="gap-2">
               <Plus className="w-4 h-4" /> Cadastrar primeiro
             </Button>
@@ -248,27 +281,96 @@ export default function AdminPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar Cachorro' : 'Novo Cachorro'}</DialogTitle>
+            <DialogTitle>{editing ? 'Editar Animal' : 'Novo Animal'}</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSave} className="space-y-4 pt-2">
-            {/* Photo */}
+            {/* Fotos */}
             <div className="space-y-2">
-              <Label>Foto</Label>
-              <div
-                className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted border-2 border-dashed border-border cursor-pointer hover:border-primary/50 transition-colors"
+              <Label>Fotos</Label>
+              <p className="text-xs text-muted-foreground">
+                A primeira imagem é a capa. É possível adicionar várias fotos por animal.
+              </p>
+
+              {(existingImages.length > 0 || newPhotos.length > 0) && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {existingImages.map((url, idx) => (
+                    <div
+                      key={url}
+                      className="relative group aspect-square rounded-lg overflow-hidden bg-muted border border-border"
+                    >
+                      <img src={url} alt={`foto ${idx + 1}`} className="w-full h-full object-cover" />
+                      {idx === 0 && (
+                        <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                          <Star className="w-2.5 h-2.5" /> Capa
+                        </span>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        {idx !== 0 && (
+                          <button
+                            type="button"
+                            title="Tornar capa"
+                            onClick={() => makeCover(url)}
+                            className="bg-white/90 hover:bg-white text-foreground rounded-full w-7 h-7 flex items-center justify-center"
+                          >
+                            <Star className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          title="Remover"
+                          onClick={() => removeExisting(url)}
+                          className="bg-white/90 hover:bg-white text-destructive rounded-full w-7 h-7 flex items-center justify-center"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {newPhotos.map((p, idx) => (
+                    <div
+                      key={p.preview}
+                      className="relative group aspect-square rounded-lg overflow-hidden bg-muted border border-dashed border-primary/40"
+                    >
+                      <img src={p.preview} alt={`nova foto ${idx + 1}`} className="w-full h-full object-cover" />
+                      {existingImages.length === 0 && idx === 0 && (
+                        <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                          <Star className="w-2.5 h-2.5" /> Capa
+                        </span>
+                      )}
+                      <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                        Nova
+                      </span>
+                      <button
+                        type="button"
+                        title="Remover"
+                        onClick={() => removeNewPhoto(idx)}
+                        className="absolute top-1 right-1 bg-white/90 hover:bg-white text-destructive rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
                 onClick={() => fileRef.current?.click()}
+                className="w-full rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors py-4 flex flex-col items-center justify-center gap-1 text-muted-foreground"
               >
-                {photoPreview ? (
-                  <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
-                    <PawPrint className="w-8 h-8" />
-                    <span className="text-sm">Clique para selecionar</span>
-                  </div>
-                )}
-              </div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+                <ImagePlus className="w-6 h-6" />
+                <span className="text-sm">Adicionar fotos</span>
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handlePhotos}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

@@ -17,3 +17,17 @@ export const dogs = pgTable('dogs', {
 
 export type Dog = typeof dogs.$inferSelect
 export type NewDog = typeof dogs.$inferInsert
+
+export const news = pgTable('news', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  summary: text('summary').notNull().default(''),
+  content: text('content').notNull().default(''),
+  coverImageUrl: text('cover_image_url').notNull().default(''),
+  published: boolean('published').notNull().default(true),
+  publishedAt: timestamp('published_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type News = typeof news.$inferSelect
+export type NewNews = typeof news.$inferInsert

@@ -1,0 +1,15 @@
+[1mdiff --git a/lib/db.ts b/lib/db.ts[m
+[1mindex aa99ce1..3b5dedc 100644[m
+[1m--- a/lib/db.ts[m
+[1m+++ b/lib/db.ts[m
+[36m@@ -1,7 +1,10 @@[m
+[32m+[m[32mimport dns from 'dns'[m
+ import { neon } from '@neondatabase/serverless'[m
+ import { drizzle } from 'drizzle-orm/neon-http'[m
+ import * as schema from './schema'[m
+ [m
+[32m+[m[32mdns.setDefaultResultOrder('ipv4first')[m
+[32m+[m
+ export function getDb() {[m
+   const sql = neon(process.env.DATABASE_URL!)[m
+   return drizzle(sql, { schema })[m
