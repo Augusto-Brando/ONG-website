@@ -119,9 +119,9 @@ export default function DogDetailModal({ dog, open, onClose }: DogDetailModalPro
             {/* Cabeçalho */}
             <div className="flex items-start justify-between gap-3 mb-5">
               <div>
-                <h2 className="text-2xl font-bold text-foreground leading-tight">
+                <DialogTitle className="text-2xl font-bold text-foreground leading-tight">
                   {dog.name}
-                </h2>
+                </DialogTitle>
                 <p className="text-muted-foreground mt-0.5">{dog.breed}</p>
               </div>
               <Badge

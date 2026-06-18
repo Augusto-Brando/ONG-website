@@ -1,7 +1,7 @@
 "use client"
 
 import { Calendar, Newspaper, X } from "lucide-react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import type { News } from "@/lib/schema"
 
 interface NewsDetailModalProps {
@@ -47,7 +47,7 @@ export default function NewsDetailModal({ item, open, onClose }: NewsDetailModal
               <Calendar className="w-3.5 h-3.5" />
               <span>{date}</span>
             </div>
-            <h2 className="text-2xl font-bold text-foreground leading-tight mb-4">{item.title}</h2>
+            <DialogTitle className="text-2xl font-bold text-foreground leading-tight mb-4">{item.title}</DialogTitle>
 
             {item.summary && (
               <p className="text-base text-foreground/80 font-medium leading-relaxed mb-4">{item.summary}</p>
