@@ -19,12 +19,12 @@ export default function AboutSection() {
             </h2>
             <div className="space-y-4 text-foreground/80">
               <p className="text-lg leading-relaxed">
-                Amor não tem Raça é uma organização sem fins lucrativos dedicada ao resgate, 
-                reabilitação e adoção de cães abandonados e maltratados.
+                Amor não tem Raça é uma organização sem fins lucrativos dedicada ao resgate,
+                reabilitação e adoção de animais abandonados e maltratados.
               </p>
               <p className="text-lg leading-relaxed">
-                Desde 2015, já resgatamos mais de 500 cães e os colocamos em lares 
-                amorosos. Nossa missão é dar uma segunda chance a cada cão que chega até nós.
+                Desde 2015, já resgatamos mais de 500 animais e os colocamos em lares
+                amorosos. Nossa missão é dar uma segunda chance a cada animal que chega até nós.
               </p>
               <p className="text-lg leading-relaxed">
                 Toda adoção inclui vacinação, microchip, castração e um mês de acompanhamento 
@@ -36,7 +36,7 @@ export default function AboutSection() {
             <div className="grid grid-cols-3 gap-4 mt-8">
               <div className="bg-primary/10 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-primary">500+</p>
-                <p className="text-sm text-muted-foreground mt-2">Cães Resgatados</p>
+                <p className="text-sm text-muted-foreground mt-2">Animais Resgatados</p>
               </div>
               <div className="bg-accent/20 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-accent">8 Anos</p>
