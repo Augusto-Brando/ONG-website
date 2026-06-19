@@ -3,39 +3,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { PawPrint, Plus, Pencil, Trash2, LogOut, X, Check, Star, ImagePlus, Newspaper } from 'lucide-react'
+import { PawPrint, Plus, Pencil, Trash2, LogOut, X, Check, Newspaper, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { DogFormDialog, emptyDogForm } from '@/components/admin/dog-form-dialog'
 import { toast } from 'sonner'
 import type { Dog } from '@/lib/schema'
-
-const COLORS = [
-  { label: 'Laranja', value: '#F97316' },
-  { label: 'Roxo', value: '#8B5CF6' },
-  { label: 'Rosa', value: '#EC4899' },
-  { label: 'Azul', value: '#06B6D4' },
-]
 
 function buildImageList(dog: Dog): string[] {
   return Array.from(
     new Set([dog.imageUrl, ...((dog.images as string[] | null) ?? [])].filter(Boolean)),
   )
-}
-
-const emptyForm = {
-  name: '',
-  breed: 'Vira-lata',
-  age: '',
-  weight: '',
-  description: '',
-  observations: '',
-  color: '#F97316',
-  available: true,
-  imageUrl: '',
 }
 
 export default function AdminPage() {
@@ -44,7 +22,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Dog | null>(null)
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(emptyDogForm)
   const [existingImages, setExistingImages] = useState<string[]>([])
   const [newPhotos, setNewPhotos] = useState<{ file: File; preview: string }[]>([])
   const [saving, setSaving] = useState(false)
@@ -61,7 +39,7 @@ export default function AdminPage() {
 
   function openCreate() {
     setEditing(null)
-    setForm(emptyForm)
+    setForm(emptyDogForm)
     setExistingImages([])
     setNewPhotos([])
     setOpen(true)
@@ -173,6 +151,11 @@ export default function AdminPage() {
                 <Newspaper className="w-4 h-4" /> <span className="hidden sm:inline">Notícias</span>
               </Link>
             </Button>
+            <Button asChild variant="outline" size="sm" className="gap-2">
+              <Link href="/admin/reports">
+                <BarChart3 className="w-4 h-4" /> <span className="hidden sm:inline">Relatórios</span>
+              </Link>
+            </Button>
             <Button onClick={openCreate} size="sm" className="gap-2">
               <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Adicionar</span>
             </Button>
@@ -277,212 +260,22 @@ export default function AdminPage() {
         )}
       </main>
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Editar Animal' : 'Novo Animal'}</DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleSave} className="space-y-4 pt-2">
-            {/* Fotos */}
-            <div className="space-y-2">
-              <Label>Fotos</Label>
-              <p className="text-xs text-muted-foreground">
-                A primeira imagem é a capa. É possível adicionar várias fotos por animal.
-              </p>
-
-              {(existingImages.length > 0 || newPhotos.length > 0) && (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {existingImages.map((url, idx) => (
-                    <div
-                      key={url}
-                      className="relative group aspect-square rounded-lg overflow-hidden bg-muted border border-border"
-                    >
-                      <img src={url} alt={`foto ${idx + 1}`} className="w-full h-full object-cover" />
-                      {idx === 0 && (
-                        <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                          <Star className="w-2.5 h-2.5" /> Capa
-                        </span>
-                      )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
-                        {idx !== 0 && (
-                          <button
-                            type="button"
-                            title="Tornar capa"
-                            onClick={() => makeCover(url)}
-                            className="bg-white/90 hover:bg-white text-foreground rounded-full w-7 h-7 flex items-center justify-center"
-                          >
-                            <Star className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          title="Remover"
-                          onClick={() => removeExisting(url)}
-                          className="bg-white/90 hover:bg-white text-destructive rounded-full w-7 h-7 flex items-center justify-center"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
-                  {newPhotos.map((p, idx) => (
-                    <div
-                      key={p.preview}
-                      className="relative group aspect-square rounded-lg overflow-hidden bg-muted border border-dashed border-primary/40"
-                    >
-                      <img src={p.preview} alt={`nova foto ${idx + 1}`} className="w-full h-full object-cover" />
-                      {existingImages.length === 0 && idx === 0 && (
-                        <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                          <Star className="w-2.5 h-2.5" /> Capa
-                        </span>
-                      )}
-                      <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                        Nova
-                      </span>
-                      <button
-                        type="button"
-                        title="Remover"
-                        onClick={() => removeNewPhoto(idx)}
-                        className="absolute top-1 right-1 bg-white/90 hover:bg-white text-destructive rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="w-full rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors py-4 flex flex-col items-center justify-center gap-1 text-muted-foreground"
-              >
-                <ImagePlus className="w-6 h-6" />
-                <span className="text-sm">Adicionar fotos</span>
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handlePhotos}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome *</Label>
-                <Input
-                  id="name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="breed">Raça</Label>
-                <Input
-                  id="breed"
-                  value={form.breed}
-                  onChange={(e) => setForm({ ...form, breed: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="age">Idade *</Label>
-                <Input
-                  id="age"
-                  placeholder="ex: 2 anos"
-                  value={form.age}
-                  onChange={(e) => setForm({ ...form, age: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="weight">Peso</Label>
-                <Input
-                  id="weight"
-                  placeholder="ex: 15kg"
-                  value={form.weight}
-                  onChange={(e) => setForm({ ...form, weight: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição *</Label>
-              <Textarea
-                id="description"
-                rows={3}
-                placeholder="Fale sobre a personalidade do animal..."
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="observations">Observações</Label>
-              <Textarea
-                id="observations"
-                rows={2}
-                placeholder="Cuidados especiais, histórico, etc..."
-                value={form.observations}
-                onChange={(e) => setForm({ ...form, observations: e.target.value })}
-              />
-            </div>
-
-            {/* Color */}
-            <div className="space-y-2">
-              <Label>Cor do card</Label>
-              <div className="flex gap-3">
-                {COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    title={c.label}
-                    onClick={() => setForm({ ...form, color: c.value })}
-                    className="w-8 h-8 rounded-full border-2 transition-all"
-                    style={{
-                      backgroundColor: c.value,
-                      borderColor: form.color === c.value ? '#000' : 'transparent',
-                      outline: form.color === c.value ? `2px solid ${c.value}` : 'none',
-                      outlineOffset: '2px',
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Available */}
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="available"
-                checked={form.available}
-                onChange={(e) => setForm({ ...form, available: e.target.checked })}
-                className="w-4 h-4 accent-primary"
-              />
-              <Label htmlFor="available" className="cursor-pointer">Disponível para adoção</Label>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="flex-1" disabled={saving}>
-                {saving ? 'Salvando...' : editing ? 'Salvar alterações' : 'Cadastrar'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <DogFormDialog
+        open={open}
+        setOpen={setOpen}
+        editing={editing}
+        form={form}
+        setForm={setForm}
+        existingImages={existingImages}
+        newPhotos={newPhotos}
+        saving={saving}
+        fileRef={fileRef}
+        onSubmit={handleSave}
+        onPhotosChange={handlePhotos}
+        onRemoveExisting={removeExisting}
+        onMakeCover={makeCover}
+        onRemoveNewPhoto={removeNewPhoto}
+      />
     </div>
   )
 }

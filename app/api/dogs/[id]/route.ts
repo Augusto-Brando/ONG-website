@@ -82,8 +82,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   for (const u of removed) {
     try {
       await del(u)
-    } catch {
-
+    } catch (error) {
+      console.error('Erro ao remover imagem antiga do animal.', error)
     }
   }
 
@@ -108,7 +108,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   for (const u of toDelete) {
     try {
       await del(u)
-    } catch {
+    } catch (error) {
+      console.error('Erro ao remover imagem do animal excluído.', error)
     }
   }
 
