@@ -11,9 +11,9 @@ export const metadata: Metadata = {
   title: 'Amor não tem Raça - Adoção de Animais',
   description: 'Conheça animais disponíveis para adoção e ajude a ONG Amor não tem Raça.',
   icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
-    shortcut: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
-    apple: '/apple-icon.png',
+    icon: [{ url: '/logo.jpeg', type: 'image/jpeg' }],
+    shortcut: [{ url: '/logo.jpeg', type: 'image/jpeg' }],
+    apple: '/logo.jpeg',
   },
 }
 

@@ -137,9 +137,7 @@ export default function AdminPage() {
       <header className="border-b border-border bg-background/95 sticky top-0 z-10">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <PawPrint className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src="/logo.jpeg" alt="Amor não tem Raça" className="h-10 w-auto object-contain" />
             <div>
               <p className="font-bold text-primary leading-none">Admin</p>
               <p className="text-xs text-muted-foreground">Amor não tem Raça</p>

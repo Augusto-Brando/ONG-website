@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { PawPrint } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,9 +35,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <PawPrint className="w-8 h-8 text-primary-foreground" />
-          </div>
+          <img src="/logo.jpeg" alt="Amor não tem Raça" className="h-20 w-auto object-contain" />
           <h1 className="text-2xl font-bold text-primary">Área Administrativa</h1>
           <p className="text-sm text-muted-foreground">Amor não tem Raça</p>
         </div>
