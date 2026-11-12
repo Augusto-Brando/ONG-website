@@ -12,6 +12,10 @@ type Ctx = { params: Promise<{ id: string }> }
 
 const IN_PROGRESS_STAGES = ['triagem', 'entrevista', 'visita', 'aprovado'] as const
 const LOST_STAGES = ['recusado', 'desistiu'] as const
+/** Etapas que representam adoção concluída (no animal: `adotado`, fora da vitrine). */
+const ADOPTED_STAGES = ['adotado', 'pos_adocao'] as const
+/** Etapas para as quais o animal volta ao processo depois de desfazer uma adoção. */
+const BACK_TO_PROCESS_STAGES = ['novo', 'triagem', 'entrevista', 'visita', 'aprovado'] as const
 
 export async function PATCH(req: Request, { params }: Ctx) {
   const auth = await requireArea('adocoes')
@@ -30,24 +34,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const closed = (CLOSED_STAGES as readonly string[]).includes(next)
   const now = new Date()
 
-  const [updated] = await db
-    .update(adoptionRequests)
-    .set({ stage: next, updatedAt: now, closedAt: closed ? now : null })
-    .where(eq(adoptionRequests.id, id))
-    .returning()
-
   const labelFrom = STAGE_LABELS[previous] ?? previous
   const labelTo = STAGE_LABELS[next] ?? next
   const content = `Etapa: ${labelFrom} → ${labelTo}${data.note ? `\n\n${data.note}` : ''}`
 
-  await db.insert(interactions).values({
-    requestId: id,
-    userId: auth.uid || null,
-    type: 'mudanca_etapa',
-    content,
-  })
-
-  // Efeitos no animal vinculado.
+  // Efeitos no animal vinculado. Gravamos o animal ANTES da solicitação: se algo falhar
+  // no meio, o animal nunca fica na vitrine depois de já constar como adotado.
   let animalName: string | null = null
   if (current.animalId) {
     const [animal] = await db
@@ -57,10 +49,22 @@ export async function PATCH(req: Request, { params }: Ctx) {
       .limit(1)
     if (animal) {
       animalName = animal.name
-      if (next === 'adotado') {
+      const cameFromAdopted = (ADOPTED_STAGES as readonly string[]).includes(previous)
+      if ((ADOPTED_STAGES as readonly string[]).includes(next)) {
         await db
           .update(dogs)
           .set({ status: 'adotado', available: false, adoptedAt: todayIso() })
+          .where(eq(dogs.id, animal.id))
+      } else if (cameFromAdopted) {
+        // Voltou de 'adotado'/'pos_adocao': desfaz a adoção no animal.
+        const backToProcess = (BACK_TO_PROCESS_STAGES as readonly string[]).includes(next)
+        await db
+          .update(dogs)
+          .set({
+            status: backToProcess ? 'em_processo' : 'disponivel',
+            available: true,
+            adoptedAt: null,
+          })
           .where(eq(dogs.id, animal.id))
       } else if ((IN_PROGRESS_STAGES as readonly string[]).includes(next)) {
         await db.update(dogs).set({ status: 'em_processo' }).where(eq(dogs.id, animal.id))
@@ -72,6 +76,20 @@ export async function PATCH(req: Request, { params }: Ctx) {
       }
     }
   }
+
+  const [updated] = await db
+    .update(adoptionRequests)
+    .set({ stage: next, updatedAt: now, closedAt: closed ? now : null })
+    .where(eq(adoptionRequests.id, id))
+    .returning()
+
+  // Histórico por último: uma falha antes deixa o animal e a solicitação consistentes.
+  await db.insert(interactions).values({
+    requestId: id,
+    userId: auth.uid || null,
+    type: 'mudanca_etapa',
+    content,
+  })
 
   // Aviso ao interessado (sem bloquear a resposta em caso de falha).
   const [adopter] = await db.select().from(adopters).where(eq(adopters.id, current.adopterId)).limit(1)
