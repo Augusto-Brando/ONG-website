@@ -45,15 +45,17 @@ export default async function Home() {
   const [dogs, news] = await Promise.all([getDogs(), getNews()])
 
   return (
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Header />
-      <DogCarousel dogs={dogs} />
-      <DogCatalog dogs={dogs} />
-      <AboutSection />
-      <NewsSection news={news} />
-      <DonationSection />
-      <ContactSection />
+      <main id="conteudo" tabIndex={-1} className="focus:outline-none">
+        <DogCarousel dogs={dogs} />
+        <DogCatalog dogs={dogs} />
+        <AboutSection />
+        <NewsSection news={news} />
+        <DonationSection />
+        <ContactSection />
+      </main>
       <Footer />
-    </main>
+    </div>
   )
 }

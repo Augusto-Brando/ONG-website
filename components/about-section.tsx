@@ -39,11 +39,11 @@ export default function AboutSection() {
                 <p className="text-sm text-muted-foreground mt-2">Animais Resgatados</p>
               </div>
               <div className="bg-accent/20 rounded-lg p-4 text-center">
-                <p className="text-3xl font-bold text-accent">8 Anos</p>
+                <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">8 Anos</p>
                 <p className="text-sm text-muted-foreground mt-2">De Atuação</p>
               </div>
               <div className="bg-secondary/10 rounded-lg p-4 text-center">
-                <p className="text-3xl font-bold text-secondary">100%</p>
+                <p className="text-3xl font-bold text-amber-700 dark:text-amber-300">100%</p>
                 <p className="text-sm text-muted-foreground mt-2">Voluntários</p>
               </div>
             </div>

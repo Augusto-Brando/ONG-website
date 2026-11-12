@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Weight, Calendar, PawPrint, X } from "lucide
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -129,6 +130,9 @@ export default function DogDetailModal({ dog, open, onClose }: DogDetailModalPro
                 <DialogTitle className="text-2xl font-bold text-foreground leading-tight">
                   {dog.name}
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Detalhes de {dog.name} para adoção
+                </DialogDescription>
                 <p className="text-muted-foreground mt-0.5">{dog.breed}</p>
               </div>
               <Badge

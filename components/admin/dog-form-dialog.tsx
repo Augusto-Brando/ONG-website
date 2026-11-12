@@ -98,8 +98,8 @@ export function DogFormDialog({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Fotos</Label>
+          <div className="space-y-2" role="group" aria-labelledby="fotos-label">
+            <Label id="fotos-label">Fotos</Label>
             <p className="text-xs text-muted-foreground">
               A primeira imagem é a capa. É possível adicionar várias fotos por animal.
             </p>
@@ -175,7 +175,15 @@ export function DogFormDialog({
               <ImagePlus className="w-6 h-6" />
               <span className="text-sm">Adicionar fotos</span>
             </button>
-            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={onPhotosChange} />
+            <input
+              ref={fileRef}
+              id="fotos-input"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={onPhotosChange}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -223,8 +231,8 @@ export function DogFormDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Cor do card</Label>
+          <div className="space-y-2" role="group" aria-labelledby="cor-card-label">
+            <Label id="cor-card-label">Cor do card</Label>
             <div className="flex gap-3">
               {COLORS.map((color) => (
                 <button

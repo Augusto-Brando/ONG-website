@@ -151,3 +151,95 @@ Tema escuro (`.dark`, hoje não aplicado): `primary` 7,18:1, `foreground` 16,27:
   rodada, os demais estão documentados acima para o maestro distribuir.
 - Recomenda-se refazer esta auditoria depois de aplicar as correções de contraste
   (A4–A6) e de tamanho de alvo (A1), medindo novamente as razões.
+
+---
+
+## 6. Correções aplicadas
+
+Segunda rodada (2026-11-12, agente Forja): os achados A1–A7, A9–A12 foram corrigidos no código;
+A8, A13 e A14 ficam para o redesign, como combinado. As seções 1–5 acima são o retrato de
+**antes** da correção e foram mantidas como registro da auditoria.
+
+**Como as razões abaixo foram medidas:** o app rodando foi consultado
+(`curl` da página → `curl` do CSS compilado em `/_next/static/chunks/…css`) e os valores
+**hexadecimais efetivamente servidos** foram convertidos para luminância relativa (WCAG 2.x).
+Fundos translúcidos (`bg-accent/20`, `bg-primary/10`…) foram compostos em sRGB, como o navegador
+faz. Por isso alguns números diferem na segunda casa decimal dos da seção 4, que partiu dos
+valores `oklch` antes da conversão de gamut do navegador.
+
+### 6.1 Contraste do tema (valores servidos depois da correção)
+
+| Combinação | Antes | Depois | Mínimo | Situação |
+|---|---|---|---|---|
+| `primary` (texto 14 px) sobre `background` | 3,72:1 | **5,21:1** | 4,5:1 | OK |
+| `primary` (texto) sobre `card` | 3,72:1 | **5,37:1** | 4,5:1 | OK |
+| `primary` (texto) sobre `bg-accent/10` (seção Sobre) | 3,38:1 | **4,74:1** | 4,5:1 | OK |
+| `primary-foreground` sobre `primary` (texto de botão, 14 px) | 3,61:1 | **5,05:1** | 4,5:1 | OK |
+| `primary` sobre `bg-primary/10` ("500+", texto grande) | 3,45:1 | **4,12:1** | 3:1 | OK |
+| "8 Anos" — antes `text-accent`, agora `text-orange-700` | 2,33:1 | **3,86:1** | 3:1 | OK |
+| "100%" — antes `text-secondary`, agora `text-amber-700` | 2,32:1 | **4,13:1** | 3:1 | OK |
+| `destructive-foreground` sobre `destructive` | 1,00:1 | **4,87:1** | 4,5:1 | OK |
+| branco sobre `destructive` do tema escuro | 2,63:1 | **10,03:1** | 4,5:1 | OK |
+| borda de campo (`input`) sobre `background` | 1,12:1 | **3,26:1** | 3:1 | OK |
+| borda de campo (`input`) sobre `card` | — | **3,35:1** | 3:1 | OK |
+| borda de tabela (`border`) sobre `background` | 1,31:1 | 1,31:1 (mantida) | 3:1 | fora do escopo (ver A7) |
+| anel de foco (`ring`) sobre `background` | 3,72:1 | **3,75:1** | 3:1 | OK |
+| `foreground` / `muted-foreground` sobre `background` | 15,53 / 5,82 | 15,50 / 5,80 | 4,5:1 | OK |
+
+### 6.2 O que mudou, achado por achado
+
+- **A1 (2.5.8 — alvos de toque)** `components/dog-carousel.tsx`: o ponto visual continua com 8 px
+  de altura, mas agora fica dentro de um `<button>` de **24×24 px** (36×24 no ativo), com
+  `aria-current` no item atual e anel de foco. Medido no HTML servido: 6 botões
+  `flex h-6 …` para 6 animais.
+- **A2 (2.4.1 — bypass blocks)** `components/header.tsx` ganhou o link "Pular para o conteúdo"
+  com o mesmo estilo de `components/admin/admin-shell.tsx` (visível só ao receber foco, contraste
+  `primary-foreground` sobre `primary` = 5,05:1) e `app/page.tsx` passou a expor
+  `<main id="conteudo" tabIndex={-1}>`; o `header` e o `footer` saíram de dentro do `main`
+  (marcos corretos: `header` → `main` → `footer`). O `nav` do cabeçalho recebeu
+  `aria-label="Seções do site"`.
+- **A3 (4.1.3)** `app/admin/login/page.tsx`: a mensagem de erro virou `<p role="alert">`, então é
+  anunciada assim que aparece.
+- **A4 (1.4.3)** `app/globals.css`: `--primary` de `oklch(0.6 0.14 237)` para
+  `oklch(0.52 0.14 237)` — mesmo croma e matiz, só a luminosidade baixou (o navegador serve
+  `#0071a6`). O texto branco do botão primário subiu de 3,6:1 para 5,05:1.
+- **A5 (1.4.3)** `components/about-section.tsx`: "8 Anos" passou de `text-accent` para
+  `text-orange-700` e "100%" de `text-secondary` para `text-amber-700` (com variantes
+  `dark:` equivalentes), mantendo a identidade laranja/amarela; "500+" continua em `text-primary`,
+  que escureceu junto com o A4 (4,12:1).
+- **A6 (1.4.3)** `app/globals.css`: `--destructive-foreground` agora é `oklch(1 0 0)` (branco) nos
+  dois temas, diferente de `--destructive`: 4,87:1 no claro e 10,03:1 no escuro.
+- **A7 (1.4.11)** `app/globals.css`: `--input` de `oklch(0.95 0.01 240)` para
+  `oklch(0.64 0.02 240)` (servido `#828e97`) → 3,26:1 contra o fundo e 3,35:1 contra o cartão,
+  o que atende a borda de **campo de formulário**. `--border` (bordas de tabela e divisórias)
+  foi **mantido** em 1,31:1 de propósito: escurecê-lo até 3:1 deixaria todas as tabelas do painel
+  pesadas, e ele não é limite de componente interativo. Se o time quiser, o caminho é separar
+  `--border-strong` para os casos que precisam de 3:1.
+- **A9 (4.1.2)** `components/dog-detail-modal.tsx` e `components/news-detail-modal.tsx` receberam
+  `<DialogDescription className="sr-only">` ("Detalhes de <nome> para adoção" / "Notícia
+  completa"), então o `aria-describedby` do Radix aponta para um nó que existe.
+- **A10 (3.1.2)** `components/ui/dialog.tsx`: o texto do botão de fechar passou de "Close" para
+  **"Fechar"**.
+- **A11 (2.5.8)** `components/footer.tsx` (7 links) e `components/contact-section.tsx` (3 links)
+  receberam `inline-flex min-h-6 items-center py-1` → alvo de **24 px** de altura (antes 21 px),
+  sem mudança visual perceptível.
+- **A12 (1.3.1 / 3.3.2)** `components/admin/dog-form-dialog.tsx`: os blocos "Fotos" e
+  "Cor do card" viraram `<div role="group" aria-labelledby="…">` com o `<Label>` carregando o
+  `id`, e o `<input type="file">` ganhou `id="fotos-input"`. Os nomes acessíveis agora são
+  "Fotos" e "Cor do card".
+
+### 6.3 Não corrigidos nesta rodada (ficam para o redesign)
+
+- **A8 (1.3.1 / 2.4.6)** `components/ui/card.tsx:31` — `CardTitle` continua `<div>`; os títulos dos
+  cartões do painel não são headings. Mexe em `components/ui/card.tsx` e em todas as telas que o
+  usam.
+- **A13 (1.4.3 / 1.4.11)** `app/globals.css` (tema escuro) — `--border`/`--input` escuros seguem
+  abaixo de 3:1. O tema escuro continua não aplicado (`ThemeProvider` não é montado em
+  `app/layout.tsx`); ajustar quando ele for ativado.
+- **A14 (1.3.1 / 2.4.6)** `components/admin/adocoes/request-card.tsx:30` e
+  `components/news-section.tsx:70` — título dentro de `<button>`; entra no redesign desses cards.
+
+Observações fora do escopo dos 14 achados, registradas sem alterar código: os botões só com ícone
+dos dois diálogos públicos (`dog-detail-modal.tsx:70-91` — fechar, anterior, próximo e
+miniaturas, e `news-detail-modal.tsx:36`) não têm `aria-label`; é o mesmo critério 4.1.2 do A10 e
+vale incluir no redesign. Os alvos desses botões já têm 32–36 px.
