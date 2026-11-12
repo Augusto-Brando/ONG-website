@@ -14,7 +14,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:seed": "tsx --env-file=.env scripts/seed.ts",
-    "db:up": "docker compose up -d --wait"
+    "db:up": "docker compose up -d --wait",
+    "db:backup": "node scripts/backup.mjs",
+    "db:restore": "node scripts/restore.mjs",
+    "test:e2e": "node scripts/e2e.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
