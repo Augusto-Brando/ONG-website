@@ -10,6 +10,18 @@ export const dynamic = 'force-dynamic'
 
 type TransactionKind = (typeof transactionKind.enumValues)[number]
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+/** Data no formato AAAA-MM-DD e existente no calendário. */
+function isIsoDate(value: string): boolean {
+  if (!ISO_DATE.test(value)) return false
+  const [ano, mes, dia] = value.split('-').map(Number)
+  const data = new Date(Date.UTC(ano, mes - 1, dia))
+  return (
+    data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia
+  )
+}
+
 function round2(value: number): number {
   return Math.round(value * 100) / 100
 }
@@ -22,6 +34,10 @@ export async function GET(req: Request) {
   const from = url.searchParams.get('from')
   const to = url.searchParams.get('to')
   const kind = url.searchParams.get('kind')
+
+  if ((from && !isIsoDate(from)) || (to && !isIsoDate(to))) {
+    return NextResponse.json({ error: 'Data inválida, use AAAA-MM-DD' }, { status: 400 })
+  }
 
   const filters: SQL[] = []
   if (from) filters.push(gte(transactions.date, from))
@@ -59,6 +75,14 @@ export async function POST(req: Request) {
   if (auth instanceof Response) return auth
   const data = await parseBody(req, transactionInput)
   if (data instanceof Response) return data
+
+  // Lançamento de doação nasce só em `POST /api/donations`: aqui seria receita dupla.
+  if (data.donationId) {
+    return NextResponse.json(
+      { error: 'Lançamentos de doação são criados pela própria doação' },
+      { status: 400 },
+    )
+  }
 
   const [created] = await getDb()
     .insert(transactions)

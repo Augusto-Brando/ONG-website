@@ -11,6 +11,18 @@ export const dynamic = 'force-dynamic'
 
 type DonationType = (typeof donationType.enumValues)[number]
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+/** Data no formato AAAA-MM-DD e existente no calendário. */
+function isIsoDate(value: string): boolean {
+  if (!ISO_DATE.test(value)) return false
+  const [ano, mes, dia] = value.split('-').map(Number)
+  const data = new Date(Date.UTC(ano, mes - 1, dia))
+  return (
+    data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia
+  )
+}
+
 /** Descrição do lançamento gerado a partir de uma doação. */
 function donationDescription(donorName: string | null | undefined): string {
   const nome = donorName?.trim()
@@ -25,6 +37,10 @@ export async function GET(req: Request) {
   const from = url.searchParams.get('from')
   const to = url.searchParams.get('to')
   const type = url.searchParams.get('type')
+
+  if ((from && !isIsoDate(from)) || (to && !isIsoDate(to))) {
+    return NextResponse.json({ error: 'Data inválida, use AAAA-MM-DD' }, { status: 400 })
+  }
 
   const filters: SQL[] = []
   if (from) filters.push(gte(donations.receivedAt, from))
@@ -76,6 +92,18 @@ export async function POST(req: Request) {
   if (data instanceof Response) return data
 
   const db = getDb()
+
+  // A campanha precisa existir (a FK é `set null` e não protege a entrada).
+  if (data.campaignId) {
+    const [campaign] = await db
+      .select({ id: campaigns.id })
+      .from(campaigns)
+      .where(eq(campaigns.id, data.campaignId))
+    if (!campaign) {
+      return NextResponse.json({ error: 'Campanha não encontrada' }, { status: 400 })
+    }
+  }
+
   const [created] = await db
     .insert(donations)
     .values({
@@ -93,14 +121,25 @@ export async function POST(req: Request) {
 
   // Doação em dinheiro com valor > 0 gera uma receita no financeiro.
   if (data.type === 'dinheiro' && data.amount && data.amount > 0) {
-    await db.insert(transactions).values({
-      kind: 'receita',
-      category: 'doacao',
-      description: donationDescription(data.donorName),
-      amount: data.amount.toFixed(2),
-      date: data.receivedAt,
-      donationId: created.id,
-    })
+    try {
+      await db.insert(transactions).values({
+        kind: 'receita',
+        category: 'doacao',
+        description: donationDescription(data.donorName),
+        amount: data.amount.toFixed(2),
+        date: data.receivedAt,
+        donationId: created.id,
+      })
+    } catch (error) {
+      // Sem o lançamento a doação ficaria sem receita no financeiro: desfaz a doação.
+      console.error('Falha ao criar o lançamento da_doação', error)
+      try {
+        await db.delete(donations).where(eq(donations.id, created.id))
+      } catch (cleanupError) {
+        console.error('Falha ao desfazer a doação sem lançamento', cleanupError)
+      }
+      return NextResponse.json({ error: 'Não foi possível registrar a doação' }, { status: 500 })
+    }
   }
 
   const campaign = created.campaignId
