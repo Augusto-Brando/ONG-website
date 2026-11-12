@@ -25,7 +25,7 @@ export default function LoginPage() {
     })
 
     if (res.ok) {
-      router.push('/admin')
+      router.push('/admin/painel')
     } else {
       const data = await res.json().catch(() => ({}))
       setError(data.error || 'E-mail ou senha incorretos')

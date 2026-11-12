@@ -10,10 +10,10 @@ const ROUTE_AREAS: [string, Area][] = [
   ['/admin/estoque', 'estoque'],
   ['/admin/doacoes', 'doacoes'],
   ['/admin/financeiro', 'financeiro'],
+  ['/admin/painel', 'dashboard'],
   ['/admin/reports', 'relatorios'],
   ['/admin/news', 'noticias'],
   ['/admin/voluntarios', 'voluntarios'],
-  ['/admin/animais', 'animais'],
 ]
 
 export async function proxy(request: NextRequest) {
@@ -27,9 +27,12 @@ export async function proxy(request: NextRequest) {
     return res
   }
 
-  const area = ROUTE_AREAS.find(([prefix]) => pathname.startsWith(prefix))?.[1]
+  const area =
+    pathname === '/admin' || pathname === '/admin/'
+      ? 'animais'
+      : ROUTE_AREAS.find(([prefix]) => pathname.startsWith(prefix))?.[1]
   if (area && !can(session.role, area)) {
-    return NextResponse.redirect(new URL('/admin?sem-permissao=1', request.url))
+    return NextResponse.redirect(new URL('/admin/painel?sem-permissao=1', request.url))
   }
 
   return NextResponse.next()
