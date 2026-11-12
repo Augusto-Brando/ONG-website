@@ -298,6 +298,67 @@ async function main() {
   check('export sem e-mail de doador', 0, (csv.match(/@/g) || []).length)
   check('export entidade invalida', 404, await status('/api/export/senhas', { user: 'admin' }))
   check('voluntario barrado na exportacao', 403, await status('/api/export/doacoes', { user: 'voluntario' }))
+
+  console.log('== APIs publicas (impacto, campanhas, transparencia)')
+  // Sem login: nenhuma das tres rotas pede cookie.
+  const impacto = await json('/api/public/impacto')
+  check('api publica de impacto responde 200', 200, await status('/api/public/impacto'))
+  check(
+    'impacto com numeros',
+    'sim',
+    ['resgatados', 'adocoesNoAno', 'castracoes', 'anosDeAtuacao', 'disponiveis'].every(
+      (chave) => typeof impacto[chave] === 'number',
+    )
+      ? 'sim'
+      : 'nao',
+  )
+
+  const campanhas = await json('/api/public/campanhas')
+  check('api publica de campanhas responde 200', 200, await status('/api/public/campanhas'))
+  check(
+    'campanhas publicas com numeros',
+    'sim',
+    Array.isArray(campanhas) &&
+      campanhas.every(
+        (c) =>
+          typeof c.raised === 'number' &&
+          typeof c.donationsCount === 'number' &&
+          (c.goalAmount === null || typeof c.goalAmount === 'number'),
+      )
+      ? 'sim'
+      : 'nao',
+  )
+
+  const transparencia = await json('/api/public/transparencia')
+  check('api publica de transparencia responde 200', 200, await status('/api/public/transparencia'))
+  check(
+    'transparencia com total numerico',
+    'sim',
+    typeof transparencia.totalDespesas === 'number' ? 'sim' : 'nao',
+  )
+  check(
+    'transparencia com categorias numericas',
+    'sim',
+    Array.isArray(transparencia.categorias) &&
+      transparencia.categorias.every(
+        (c) => typeof c.valor === 'number' && typeof c.percentual === 'number',
+      )
+      ? 'sim'
+      : 'nao',
+  )
+  check(
+    'transparencia recusa ano invalido',
+    400,
+    await status('/api/public/transparencia?ano=abc'),
+  )
+
+  // Nenhuma resposta publica pode carregar e-mail (dado pessoal).
+  const corposPublicos = await Promise.all([
+    (await api('/api/public/impacto')).text(),
+    (await api('/api/public/campanhas')).text(),
+    (await api('/api/public/transparencia')).text(),
+  ])
+  check('respostas publicas sem e-mail', 0, (corposPublicos.join(' ').match(/@/g) || []).length)
 }
 
 try {
