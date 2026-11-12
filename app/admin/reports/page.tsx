@@ -1,11 +1,15 @@
 'use client'
 
+// Relatórios: resumo do cadastro de animais (impressão/PDF e planilha) e
+// exportação completa das entidades em CSV, por período (área 'relatorios').
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, BarChart3, FileSpreadsheet, FileText, PawPrint } from 'lucide-react'
+import { Download, FileSpreadsheet, FileText, PawPrint, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
+import { AdminShell } from '@/components/admin/admin-shell'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -16,6 +20,18 @@ import {
 } from '@/components/ui/table'
 import { buildAdminReport, buildAdminReportCsv, type ReportDog } from '@/lib/admin-reports'
 import { printAdminReport } from '@/lib/admin-report-print'
+import { cn } from '@/lib/utils'
+
+const EXPORT_ENTITIES = [
+  { slug: 'animais', label: 'Animais' },
+  { slug: 'adocoes', label: 'Adoções' },
+  { slug: 'doacoes', label: 'Doações' },
+  { slug: 'financeiro', label: 'Financeiro' },
+  { slug: 'estoque', label: 'Estoque' },
+  { slug: 'tratamentos', label: 'Tratamentos' },
+] as const
+
+type ExportEntity = (typeof EXPORT_ENTITIES)[number]['slug']
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('pt-BR').format(date)
@@ -52,18 +68,27 @@ function EmptyRows({ colSpan, label }: { colSpan: number; label: string }) {
 export default function AdminReportsPage() {
   const [dogs, setDogs] = useState<ReportDog[]>([])
   const [loading, setLoading] = useState(true)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const report = useMemo(() => buildAdminReport(dogs), [dogs])
   const generatedAt = useMemo(() => new Date(), [dogs])
 
+  const periodInvalid = Boolean(from && to && from > to)
+
   async function fetchDogs() {
-    const res = await fetch('/api/dogs')
-    if (!res.ok) {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/dogs')
+      if (!res.ok) {
+        toast.error('Erro ao carregar dados do relatório.')
+        return
+      }
+      setDogs(await res.json())
+    } catch {
       toast.error('Erro ao carregar dados do relatório.')
+    } finally {
       setLoading(false)
-      return
     }
-    setDogs(await res.json())
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -79,62 +104,131 @@ export default function AdminReportsPage() {
     if (!opened) toast.error('Não foi possível abrir a janela de impressão.')
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background/95 sticky top-0 z-10">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="font-bold text-primary leading-none">Relatórios</p>
-              <p className="text-xs text-muted-foreground">Amor não tem Raça</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button asChild variant="outline" size="sm" className="gap-2">
-              <Link href="/admin">
-                <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Animais</span>
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={exportPdf} disabled={loading}>
-              <FileText className="w-4 h-4" /> <span className="hidden sm:inline">PDF</span>
-            </Button>
-            <Button size="sm" className="gap-2" onClick={exportSpreadsheet} disabled={loading}>
-              <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Planilha</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+  /** URL da exportação; parâmetros vazios não entram na query. */
+  function exportHref(entity: ExportEntity) {
+    const params = new URLSearchParams()
+    if (from) params.set('from', from)
+    if (to) params.set('to', to)
+    const query = params.toString()
+    return `/api/export/${entity}${query ? `?${query}` : ''}`
+  }
 
-      <main className="container mx-auto px-4 md:px-8 py-8 space-y-8">
-        <section className="space-y-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Relatórios Administrativos</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Dados consolidados a partir dos animais cadastrados no sistema.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+  function handleExportClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (periodInvalid) {
+      e.preventDefault()
+      toast.error('A data inicial não pode ser depois da data final.')
+    }
+  }
+
+  return (
+    <AdminShell
+      title="Relatórios"
+      description="Dados consolidados dos animais e exportação das demais áreas em CSV."
+      actions={
+        <>
+          <Button variant="outline" size="sm" className="gap-2" onClick={exportPdf} disabled={loading}>
+            <FileText className="h-4 w-4" aria-hidden="true" /> PDF
+          </Button>
+          <Button size="sm" className="gap-2" onClick={exportSpreadsheet} disabled={loading}>
+            <FileSpreadsheet className="h-4 w-4" aria-hidden="true" /> Planilha
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-8">
+        <section className="space-y-3">
+          <h2 className="font-semibold text-foreground">Resumo</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <SummaryCard label="Animais cadastrados" value={report.totalAnimals} />
             <SummaryCard label="Disponíveis para adoção" value={report.availableAnimals} />
             <SummaryCard label="Adoções/Saídas registradas" value={report.adoptedAnimals} />
           </div>
         </section>
 
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="font-semibold text-foreground">Exportar dados (CSV)</h2>
+            <p className="text-sm text-muted-foreground">
+              Escolha o período (opcional) e baixe a planilha da área. O arquivo abre no Excel e no
+              LibreOffice.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="export-from">De</Label>
+              <Input
+                id="export-from"
+                type="date"
+                value={from}
+                max={to || undefined}
+                aria-invalid={periodInvalid || undefined}
+                onChange={(e) => setFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="export-to">Até</Label>
+              <Input
+                id="export-to"
+                type="date"
+                value={to}
+                min={from || undefined}
+                aria-invalid={periodInvalid || undefined}
+                onChange={(e) => setTo(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {periodInvalid && (
+            <p role="alert" className="text-sm text-destructive">
+              A data inicial não pode ser depois da data final.
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {EXPORT_ENTITIES.map((entity) => (
+              <a
+                key={entity.slug}
+                href={exportHref(entity.slug)}
+                download
+                onClick={handleExportClick}
+                aria-disabled={periodInvalid || undefined}
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'gap-2',
+                  periodInvalid && 'pointer-events-none opacity-50',
+                )}
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {entity.label}
+              </a>
+            ))}
+          </div>
+
+          <p className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              Em respeito à LGPD, as exportações de adoções e de doações não incluem telefone nem
+              e-mail dos interessados e doadores.
+            </span>
+          </p>
+        </section>
+
         {loading ? (
-          <div className="text-center py-20 text-muted-foreground">Carregando relatórios...</div>
+          <div className="py-20 text-center text-muted-foreground">Carregando relatórios...</div>
         ) : dogs.length === 0 ? (
-          <div className="text-center py-20 space-y-4">
-            <PawPrint className="w-12 h-12 mx-auto text-muted-foreground/40" />
+          <div className="space-y-4 py-20 text-center">
+            <PawPrint className="mx-auto h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
             <p className="text-muted-foreground">Nenhum animal cadastrado para gerar relatórios.</p>
+            <Button variant="outline" size="sm" onClick={fetchDogs}>
+              Tentar novamente
+            </Button>
           </div>
         ) : (
           <>
             <section className="space-y-3">
               <h2 className="font-semibold text-foreground">Quantidade de animais por categoria</h2>
-              <div className="rounded-lg border border-border bg-card">
+              <div className="overflow-x-auto rounded-lg border border-border bg-card">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -160,7 +254,7 @@ export default function AdminReportsPage() {
 
             <section className="space-y-3">
               <h2 className="font-semibold text-foreground">Histórico de adoções</h2>
-              <div className="rounded-lg border border-border bg-card">
+              <div className="overflow-x-auto rounded-lg border border-border bg-card">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -190,7 +284,7 @@ export default function AdminReportsPage() {
 
             <section className="space-y-3">
               <h2 className="font-semibold text-foreground">Registros de entradas e saídas</h2>
-              <div className="rounded-lg border border-border bg-card">
+              <div className="overflow-x-auto rounded-lg border border-border bg-card">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -205,7 +299,9 @@ export default function AdminReportsPage() {
                     {report.movementRows.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>
-                          <Badge variant={row.type === 'Entrada' ? 'default' : 'secondary'}>{row.type}</Badge>
+                          <Badge variant={row.type === 'Entrada' ? 'default' : 'secondary'}>
+                            {row.type}
+                          </Badge>
                         </TableCell>
                         <TableCell className="font-medium">{row.animal}</TableCell>
                         <TableCell>{row.category}</TableCell>
@@ -219,7 +315,7 @@ export default function AdminReportsPage() {
             </section>
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </AdminShell>
   )
 }
