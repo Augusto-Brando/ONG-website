@@ -19,6 +19,12 @@ export type DogFormState = {
   color: string
   available: boolean
   imageUrl: string
+  species: string
+  sex: string
+  status: string
+  castrated: boolean
+  vaccinated: boolean
+  rescuedAt: string
 }
 
 type NewPhoto = { file: File; preview: string }
@@ -40,6 +46,9 @@ type DogFormDialogProps = {
   onRemoveNewPhoto: (index: number) => void
 }
 
+const selectClass =
+  'h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
 const COLORS = [
   { label: 'Laranja', value: '#F97316' },
   { label: 'Roxo', value: '#8B5CF6' },
@@ -57,6 +66,12 @@ export const emptyDogForm: DogFormState = {
   color: '#F97316',
   available: true,
   imageUrl: '',
+  species: 'cao',
+  sex: 'indefinido',
+  status: 'disponivel',
+  castrated: false,
+  vaccinated: false,
+  rescuedAt: '',
 }
 
 export function DogFormDialog({
@@ -104,6 +119,7 @@ export function DogFormDialog({
                         <button
                           type="button"
                           title="Tornar capa"
+                          aria-label="Tornar capa"
                           onClick={() => onMakeCover(url)}
                           className="bg-white/90 hover:bg-white text-foreground rounded-full w-7 h-7 flex items-center justify-center"
                         >
@@ -113,6 +129,7 @@ export function DogFormDialog({
                       <button
                         type="button"
                         title="Remover"
+                        aria-label="Remover foto"
                         onClick={() => onRemoveExisting(url)}
                         className="bg-white/90 hover:bg-white text-destructive rounded-full w-7 h-7 flex items-center justify-center"
                       >
@@ -139,6 +156,7 @@ export function DogFormDialog({
                     <button
                       type="button"
                       title="Remover"
+                        aria-label="Remover foto"
                       onClick={() => onRemoveNewPhoto(idx)}
                       className="absolute top-1 right-1 bg-white/90 hover:bg-white text-destructive rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
@@ -213,6 +231,8 @@ export function DogFormDialog({
                   key={color.value}
                   type="button"
                   title={color.label}
+                  aria-label={`Cor ${color.label}`}
+                  aria-pressed={form.color === color.value}
                   onClick={() => setForm({ ...form, color: color.value })}
                   className="w-8 h-8 rounded-full border-2 transition-all"
                   style={{
@@ -226,15 +246,50 @@ export function DogFormDialog({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="available"
-              checked={form.available}
-              onChange={(e) => setForm({ ...form, available: e.target.checked })}
-              className="w-4 h-4 accent-primary"
-            />
-            <Label htmlFor="available" className="cursor-pointer">Disponível para adoção</Label>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="species">Espécie</Label>
+              <select id="species" className={selectClass} value={form.species} onChange={(e) => setForm({ ...form, species: e.target.value })}>
+                <option value="cao">Cão</option>
+                <option value="gato">Gato</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sex">Sexo</Label>
+              <select id="sex" className={selectClass} value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}>
+                <option value="indefinido">Não informado</option>
+                <option value="macho">Macho</option>
+                <option value="femea">Fêmea</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Situação</Label>
+              <select id="status" className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                <option value="disponivel">Disponível para adoção</option>
+                <option value="em_processo">Em processo de adoção</option>
+                <option value="em_tratamento">Em tratamento</option>
+                <option value="adotado">Adotado</option>
+                <option value="indisponivel">Indisponível</option>
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Só animais com situação Disponível ou Em processo de adoção aparecem no site.
+          </p>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="rescuedAt">Data do resgate</Label>
+              <Input id="rescuedAt" type="date" value={form.rescuedAt} onChange={(e) => setForm({ ...form, rescuedAt: e.target.value })} />
+            </div>
+            <div className="flex items-center gap-2 sm:pt-7">
+              <input type="checkbox" id="castrated" checked={form.castrated} onChange={(e) => setForm({ ...form, castrated: e.target.checked })} className="h-4 w-4 accent-primary" />
+              <Label htmlFor="castrated" className="cursor-pointer">Castrado</Label>
+            </div>
+            <div className="flex items-center gap-2 sm:pt-7">
+              <input type="checkbox" id="vaccinated" checked={form.vaccinated} onChange={(e) => setForm({ ...form, vaccinated: e.target.checked })} className="h-4 w-4 accent-primary" />
+              <Label htmlFor="vaccinated" className="cursor-pointer">Vacinado</Label>
+            </div>
           </div>
 
           <div className="flex gap-3 pt-2">

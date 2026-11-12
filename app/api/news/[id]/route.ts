@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { requireArea } from '@/lib/api'
 import { news } from '@/lib/schema'
-import { put, del } from '@vercel/blob'
+import { del } from '@vercel/blob'
+import { isAllowedImage, uploadFile } from '@/lib/upload'
 import { eq } from 'drizzle-orm'
 
 function slugify(title: string) {
@@ -41,7 +42,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
     }
     const ext = file.name.split('.').pop()
-    const { url } = await put(`news/${slugify(title)}-${Date.now()}.${ext}`, file, { access: 'public' })
+    const url = await uploadFile(`news/${slugify(title)}-${Date.now()}.${ext}`, file)
     coverImageUrl = url
   }
 
