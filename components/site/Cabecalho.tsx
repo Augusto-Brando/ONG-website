@@ -124,7 +124,8 @@ export function Cabecalho() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--ant-esp-2)' }}>
           <span className="hidden md:inline-flex">
-            <BotaoLink href="/doe" variacao="acao">
+            {/* Azul de contorno: o laranja fica para a ação principal de cada tela (regra da skill) */}
+            <BotaoLink href="/doe" variacao="contorno">
               Doar
             </BotaoLink>
           </span>
