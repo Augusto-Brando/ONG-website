@@ -13,8 +13,10 @@ export const dynamic = 'force-dynamic'
 
 // Limite em memória: 5 envios por IP a cada 10 minutos e 30 no total (todos os IPs).
 const WINDOW_MS = 10 * 60 * 1000
-const MAX_PER_WINDOW = 5
-const MAX_GLOBAL_PER_WINDOW = 30
+// Em produção: 5 por IP e 30 no total a cada 10 min. Fora dela (dev, testes), limites 20x maiores.
+const LIMIT_FACTOR = process.env.NODE_ENV === 'production' ? 1 : 20
+const MAX_PER_WINDOW = 5 * LIMIT_FACTOR
+const MAX_GLOBAL_PER_WINDOW = 30 * LIMIT_FACTOR
 const hits = new Map<string, number[]>()
 let globalHits: number[] = []
 

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { parseAnimalExtras } from '@/lib/animal-form'
-import { requireArea } from '@/lib/api'
+import { getSession, requireArea } from '@/lib/api'
 import { dogs } from '@/lib/schema'
 import { isAllowedImage, uploadFile } from '@/lib/upload'
-import { asc } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,8 +34,12 @@ function parseExistingImages(formData: FormData): string[] {
 
 export async function GET() {
   const db = getDb()
-  const all = await db.select().from(dogs).orderBy(asc(dogs.createdAt))
-  return NextResponse.json(all)
+  // Visitante vê só a vitrine; a equipe logada vê todos (inclusive adotados e em tratamento).
+  const session = await getSession()
+  const rows = session
+    ? await db.select().from(dogs).orderBy(asc(dogs.createdAt))
+    : await db.select().from(dogs).where(eq(dogs.available, true)).orderBy(asc(dogs.createdAt))
+  return NextResponse.json(rows)
 }
 
 export async function POST(req: Request) {

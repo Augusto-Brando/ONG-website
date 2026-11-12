@@ -139,7 +139,7 @@ async function main() {
 
   // O animal do teste e escolhido em tempo de execucao: um que esteja na vitrine agora.
   // Assim a suite roda de novo sem novo seed (o animal adotado no teste e devolvido ao fim).
-  const dogsBefore = await json('/api/dogs')
+  const dogsBefore = await json('/api/dogs', { user: 'admin' })
   const candidate = dogsBefore.find((d) => d.available && d.status !== 'adotado' && d.status !== 'indisponivel')
   const animalId = candidate ? candidate.id : 1
   check('animal disponivel para o teste', 'sim', candidate ? 'sim' : 'nao')
@@ -194,10 +194,12 @@ async function main() {
         body: { stage: 'adotado', note: 'smoke' },
       }),
     )
-    const dogs = await json('/api/dogs')
+    const dogs = await json('/api/dogs', { user: 'admin' })
     const animal = dogs.find((d) => d.id === animalId)
     check(`animal ${animalId} virou adotado`, 'adotado', animal ? animal.status : 'sem animal')
     check('animal do teste saiu da vitrine', 'nao', animal && animal.available ? 'sim' : 'nao')
+    const publicDogs = await json('/api/dogs')
+    check('vitrine publica nao lista o adotado', 'nao', publicDogs.some((d) => d.id === animalId) ? 'sim' : 'nao')
 
     const detail = await json(`/api/adoption-requests/${request.id}`, { user: 'voluntario' })
     check('detalhe tem interacoes', 'sim', (detail.interactions || []).length >= 1 ? 'sim' : 'nao')
@@ -233,7 +235,7 @@ async function main() {
         body: { stage: 'novo', note: 'e2e: restaura o animal do teste' },
       }),
     )
-    const dogsAfter = await json('/api/dogs')
+    const dogsAfter = await json('/api/dogs', { user: 'admin' })
     const restored = dogsAfter.find((d) => d.id === animalId)
     check('animal do teste volta para a vitrine', 'sim', restored && restored.available ? 'sim' : 'nao')
   }

@@ -15,8 +15,9 @@ async function getDogs(): Promise<Dog[]> {
   try {
     const { getDb } = await import('@/lib/db')
     const { dogs } = await import('@/lib/schema')
-    const { asc } = await import('drizzle-orm')
-    return getDb().select().from(dogs).orderBy(asc(dogs.createdAt))
+    const { asc, eq } = await import('drizzle-orm')
+    // Vitrine pública: só animais disponíveis ou em processo de adoção.
+    return getDb().select().from(dogs).where(eq(dogs.available, true)).orderBy(asc(dogs.createdAt))
   } catch (e) {
     console.error('getDogs falhou:', e)
     return []
