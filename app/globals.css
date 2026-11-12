@@ -1,35 +1,51 @@
-@import 'tailwindcss';
+/*
+ * Ordem das camadas: Astryx + Tailwind (ver apps/example-nextjs-tailwind do Astryx).
+ * reset → theme → base → astryx-base → astryx-theme → components → utilities
+ * Utilitários do Tailwind vencem os estilos de componente do Astryx.
+ */
+@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import '@astryxdesign/core/reset.css';
+@import '@astryxdesign/core/astryx.css';
+@import '../themes/amor/amor.css';
+@import 'tailwindcss/utilities.css' layer(utilities);
 @import 'tw-animate-css';
+
+/* Marca (skill amor-nao-tem-raca-ui): fonte única da verdade de cores, tipos e movimento */
+@import './marca/tokens.css';
+@import './marca/motion.css';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Identidade visual ONG "Amor não tem Raça": azul (predominante), laranja, amarelo/dourado */
-  --background: oklch(0.99 0.006 240);
-  --foreground: oklch(0.25 0.04 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.04 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.04 250);
-  --primary: oklch(0.52 0.14 237);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.72 0.15 75);
-  --secondary-foreground: oklch(0.25 0.04 250);
-  --muted: oklch(0.94 0.01 240);
-  --muted-foreground: oklch(0.5 0.03 250);
-  --accent: oklch(0.71 0.18 50);
-  --accent-foreground: oklch(0.22 0.03 50);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9 0.012 240);
+  /* shadcn mapeado para os tokens da marca (app/marca/tokens.css) */
+  --background: var(--ant-creme);
+  --foreground: var(--ant-tinta);
+  --card: var(--ant-branco);
+  --card-foreground: var(--ant-tinta);
+  --popover: var(--ant-branco);
+  --popover-foreground: var(--ant-tinta);
+  --primary: var(--ant-azul);
+  --primary-foreground: var(--ant-branco);
+  --secondary: var(--ant-sol-suave);
+  --secondary-foreground: var(--ant-tinta);
+  --muted: var(--ant-esqueleto);
+  --muted-foreground: var(--ant-tinta-suave);
+  --accent: var(--ant-acao);
+  --accent-foreground: var(--ant-tinta);
+  --destructive: var(--ant-erro);
+  --destructive-foreground: var(--ant-branco);
+  --border: var(--ant-areia);
   --input: oklch(0.64 0.02 240);
-  --ring: oklch(0.6 0.14 237);
+  --ring: var(--ant-azul);
   --chart-1: oklch(0.6 0.14 237);
   --chart-2: oklch(0.71 0.18 50);
   --chart-3: oklch(0.72 0.15 75);
   --chart-4: oklch(0.55 0.12 220);
   --chart-5: oklch(0.65 0.16 60);
-  --radius: 0.625rem;
+  --radius: 1rem;
   --sidebar: oklch(0.98 0.008 240);
   --sidebar-foreground: oklch(0.25 0.04 250);
   --sidebar-primary: oklch(0.6 0.14 237);
@@ -122,6 +138,12 @@
 }
 
 @layer base {
+  body {
+    font-family: var(--ant-fonte-texto);
+  }
+  h1, h2, h3 {
+    font-family: var(--ant-fonte-titulo);
+  }
   * {
     @apply border-border outline-ring/50;
   }

@@ -2,7 +2,7 @@ import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 
 const config = [
-  { ignores: ['.next/**', 'node_modules/**', 'drizzle/**', 'public/**', 'next-env.d.ts', 'components/ui/**', 'hooks/use-toast.ts'] },
+  { ignores: ['.next/**', 'node_modules/**', 'drizzle/**', 'public/**', 'next-env.d.ts', 'components/ui/**', 'hooks/use-toast.ts', 'themes/*/*.d.ts', 'themes/*/*.js', 'theme.template.ts', '.claude/**'] },
   ...nextVitals,
   ...nextTs,
   {
