@@ -33,7 +33,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   let coverImageUrl = (formData.get('coverImageUrl') as string) || ''
   const file = formData.get('cover') as File | null
-  if (file && file.size > 0) {
+  if (file instanceof File && isAllowedImage(file)) {
     const [cur] = await db.select({ coverImageUrl: news.coverImageUrl }).from(news).where(eq(news.id, newsId))
     if (isVercelBlob(cur?.coverImageUrl)) {
       try {

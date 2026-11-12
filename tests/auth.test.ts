@@ -1,5 +1,5 @@
 // Tests para lib/auth.ts
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { hashPassword, verifyPassword, signSession, verifySession, can } from '../lib/auth'
 
 process.env.SESSION_SECRET = 'segredo-de-teste-com-32-caracteres!!'

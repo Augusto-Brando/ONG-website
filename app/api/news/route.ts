@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   let coverImageUrl = (formData.get('coverImageUrl') as string) || ''
   const file = formData.get('cover') as File | null
-  if (file && file.size > 0) {
+  if (file instanceof File && isAllowedImage(file)) {
     const ext = file.name.split('.').pop()
     const url = await uploadFile(`news/${slugify(title)}-${Date.now()}.${ext}`, file)
     coverImageUrl = url
