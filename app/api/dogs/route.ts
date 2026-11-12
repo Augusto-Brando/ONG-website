@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { requireArea } from '@/lib/api'
 import { dogs } from '@/lib/schema'
 import { put } from '@vercel/blob'
 import { asc } from 'drizzle-orm'
@@ -37,6 +38,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireArea('animais')
+  if (auth instanceof Response) return auth
   const formData = await req.formData()
 
   const name = formData.get('name') as string

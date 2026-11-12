@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { requireArea } from '@/lib/api'
 import { dogs } from '@/lib/schema'
 import { put, del } from '@vercel/blob'
 import { eq } from 'drizzle-orm'
@@ -33,6 +34,8 @@ function parseExistingImages(formData: FormData): string[] {
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('animais')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const dogId = parseInt(id)
   const formData = await req.formData()
@@ -91,6 +94,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('animais')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const dogId = parseInt(id)
   const db = getDb()

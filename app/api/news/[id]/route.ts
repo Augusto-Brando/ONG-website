@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { requireArea } from '@/lib/api'
 import { news } from '@/lib/schema'
 import { put, del } from '@vercel/blob'
 import { eq } from 'drizzle-orm'
@@ -13,6 +14,8 @@ function isVercelBlob(url?: string | null) {
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('noticias')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const newsId = parseInt(id)
   const formData = await req.formData()
@@ -52,6 +55,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('noticias')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const newsId = parseInt(id)
   const db = getDb()
