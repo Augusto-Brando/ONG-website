@@ -183,7 +183,7 @@ async function main() {
     { title: 'Campanha Natal sem abandono', summary: 'Ajude com ração e vacinas.', content: 'Doe via Pix e acompanhe a meta no site.', coverImageUrl: '/dog-rescue-team-volunteers-helping-dogs.jpg' },
   ])
 
-  console.log('\nSeed concluído. Logins (senha: ong12345):')
+  console.log(`\nSeed concluído. Logins (senha: ${process.env.SEED_SENHA ? 'a definida em SEED_SENHA' : 'ong12345'}):`)
   console.log('  admin@ong.local | voluntario@ong.local | financeiro@ong.local')
 }
 
