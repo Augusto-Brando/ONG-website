@@ -73,16 +73,25 @@ export default function DogCarousel({ dogs }: { dogs: Dog[] }) {
                   </div>
 
                   <div className="mt-8 space-y-5">
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-1">
                       {dogs.map((_, index) => (
                         <button
                           key={index}
+                          type="button"
                           onClick={() => setCurrentIndex(index)}
                           aria-label={`Ir para animal ${index + 1}`}
-                          className={`h-2 rounded-full transition-all ${
-                            index === currentIndex ? "bg-primary w-8" : "bg-muted-foreground/30 w-2"
+                          aria-current={index === currentIndex ? "true" : undefined}
+                          className={`flex h-6 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                            index === currentIndex ? "w-9" : "w-6"
                           }`}
-                        />
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`block h-2 rounded-full transition-all ${
+                              index === currentIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
+                            }`}
+                          />
+                        </button>
                       ))}
                     </div>
 

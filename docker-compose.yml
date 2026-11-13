@@ -1,0 +1,23 @@
+# Ambiente local de desenvolvimento (NUNCA usar o banco de produção da ONG).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ong
+      POSTGRES_PASSWORD: ong
+      POSTGRES_DB: ong
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ong"]
+      interval: 3s
+      retries: 20
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # caixa de entrada web: http://localhost:8025
+volumes:
+  pgdata:

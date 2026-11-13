@@ -18,10 +18,10 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Links Rápidos</h4>
             <ul className="space-y-2 text-primary-foreground/80">
-              <li><a href="#dogs" className="hover:text-primary-foreground transition">Animais para Adoção</a></li>
-              <li><a href="#about" className="hover:text-primary-foreground transition">Sobre Nós</a></li>
-              <li><a href="#donations" className="hover:text-primary-foreground transition">Doações</a></li>
-              <li><a href="#contact" className="hover:text-primary-foreground transition">Contato</a></li>
+              <li><a href="#dogs" className="inline-flex min-h-6 items-center py-1 hover:text-primary-foreground transition">Animais para Adoção</a></li>
+              <li><a href="#about" className="inline-flex min-h-6 items-center py-1 hover:text-primary-foreground transition">Sobre Nós</a></li>
+              <li><a href="#donations" className="inline-flex min-h-6 items-center py-1 hover:text-primary-foreground transition">Doações</a></li>
+              <li><a href="#contact" className="inline-flex min-h-6 items-center py-1 hover:text-primary-foreground transition">Contato</a></li>
             </ul>
           </div>
 
@@ -33,7 +33,7 @@ export default function Footer() {
                   href="https://www.instagram.com/amornaotemracajf/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 hover:text-primary-foreground transition"
+                  className="inline-flex min-h-6 items-center gap-2 py-1 hover:text-primary-foreground transition"
                 >
                   <Instagram className="w-4 h-4" />
                   Instagram
@@ -44,7 +44,7 @@ export default function Footer() {
                   href="https://wa.me/5532999611971"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 hover:text-primary-foreground transition"
+                  className="inline-flex min-h-6 items-center gap-2 py-1 hover:text-primary-foreground transition"
                 >
                   <Phone className="w-4 h-4" />
                   +55 32 99961-1971
@@ -53,7 +53,7 @@ export default function Footer() {
               <li>
                 <a
                   href="mailto:amornaotemracajf@gmail.com"
-                  className="inline-flex items-center gap-2 hover:text-primary-foreground transition"
+                  className="inline-flex min-h-6 items-center gap-2 py-1 hover:text-primary-foreground transition"
                 >
                   <Mail className="w-4 h-4" />
                   amornaotemracajf@gmail.com

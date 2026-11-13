@@ -1,28 +1,16 @@
-import DogCarousel from '@/components/dog-carousel'
-import DogCatalog from '@/components/dog-catalog'
-import Header from '@/components/header'
-import AboutSection from '@/components/about-section'
-import NewsSection from '@/components/news-section'
-import DonationSection from '@/components/donation-section'
-import ContactSection from '@/components/contact-section'
-import Footer from '@/components/footer'
-import type { Dog, News } from '@/lib/schema'
+import { SiteShell } from '@/components/site/SiteShell'
+import { HomeHero } from '@/components/site/home/HomeHero'
+import { HomeImpacto } from '@/components/site/home/HomeImpacto'
+import { HomeAnimais } from '@/components/site/home/HomeAnimais'
+import { HomePassos } from '@/components/site/home/HomePassos'
+import { HomeCampanha } from '@/components/site/home/HomeCampanha'
+import { HomeNoticias } from '@/components/site/home/HomeNoticias'
+import { HomeContato } from '@/components/site/home/HomeContato'
+import type { News } from '@/lib/schema'
 
 export const dynamic = 'force-dynamic'
 
-async function getDogs(): Promise<Dog[]> {
-  if (!process.env.DATABASE_URL) return []
-  try {
-    const { getDb } = await import('@/lib/db')
-    const { dogs } = await import('@/lib/schema')
-    const { asc } = await import('drizzle-orm')
-    return getDb().select().from(dogs).orderBy(asc(dogs.createdAt))
-  } catch (e) {
-    console.error('getDogs falhou:', e)
-    return []
-  }
-}
-
+/** Notícias publicadas, direto do banco (os números de impacto vêm da API pública). */
 async function getNews(): Promise<News[]> {
   if (!process.env.DATABASE_URL) return []
   try {
@@ -40,19 +28,22 @@ async function getNews(): Promise<News[]> {
   }
 }
 
+/**
+ * Home do site público: hero, impacto, vitrine, como funciona, campanha + Pix + sócio,
+ * notícias e contato. Tudo dentro do `SiteShell` (cabeçalho, rodapé e barra fixa do celular).
+ */
 export default async function Home() {
-  const [dogs, news] = await Promise.all([getDogs(), getNews()])
+  const noticias = await getNews()
 
   return (
-    <main className="min-h-screen bg-background">
-      <Header />
-      <DogCarousel dogs={dogs} />
-      <DogCatalog dogs={dogs} />
-      <AboutSection />
-      <NewsSection news={news} />
-      <DonationSection />
-      <ContactSection />
-      <Footer />
-    </main>
+    <SiteShell>
+      <HomeHero />
+      <HomeImpacto />
+      <HomeAnimais />
+      <HomePassos />
+      <HomeCampanha />
+      <HomeNoticias noticias={noticias} />
+      <HomeContato />
+    </SiteShell>
   )
 }

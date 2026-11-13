@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { requireArea } from '@/lib/api'
 import { news } from '@/lib/schema'
-import { put } from '@vercel/blob'
+import { isAllowedImage, uploadFile } from '@/lib/upload'
 import { desc } from 'drizzle-orm'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireArea('noticias')
+  if (auth instanceof Response) return auth
   const formData = await req.formData()
 
   const title = formData.get('title') as string
@@ -29,9 +32,9 @@ export async function POST(req: Request) {
 
   let coverImageUrl = (formData.get('coverImageUrl') as string) || ''
   const file = formData.get('cover') as File | null
-  if (file && file.size > 0) {
+  if (file instanceof File && isAllowedImage(file)) {
     const ext = file.name.split('.').pop()
-    const { url } = await put(`news/${slugify(title)}-${Date.now()}.${ext}`, file, { access: 'public' })
+    const url = await uploadFile(`news/${slugify(title)}-${Date.now()}.${ext}`, file)
     coverImageUrl = url
   }
 

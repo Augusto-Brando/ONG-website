@@ -1,13 +1,15 @@
 'use client'
 
+// Notícias: cadastro com capa, publicação e exclusão. Usa a casca do painel
+// (AdminShell) para ter a navegação e o link "pular para o conteúdo".
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { Newspaper, Plus, Pencil, Trash2, ArrowLeft, X, Check, ImagePlus, Eye, EyeOff } from 'lucide-react'
+import { Newspaper, Plus, Pencil, Trash2, Check, X, ImagePlus, Eye, EyeOff } from 'lucide-react'
+import { AdminShell } from '@/components/admin/admin-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import type { News } from '@/lib/schema'
@@ -43,6 +45,7 @@ export default function AdminNewsPage() {
   async function fetchNews() {
     const res = await fetch('/api/news')
     if (res.ok) setItems(await res.json())
+    else toast.error('Erro ao carregar as notícias.')
     setLoading(false)
   }
 
@@ -114,134 +117,138 @@ export default function AdminNewsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {}
-      <header className="border-b border-border bg-background/95 sticky top-0 z-10">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Newspaper className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="font-bold text-primary leading-none">Notícias</p>
-              <p className="text-xs text-muted-foreground">Amor não tem Raça</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button asChild variant="outline" size="sm" className="gap-2">
-              <Link href="/admin">
-                <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Animais</span>
-              </Link>
-            </Button>
-            <Button onClick={openCreate} size="sm" className="gap-2">
-              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Adicionar</span>
-            </Button>
-          </div>
+    <AdminShell
+      title="Notícias"
+      description={`${items.length} notícia(s) no cadastro`}
+      actions={
+        <Button onClick={openCreate} size="sm" className="gap-2">
+          <Plus className="h-4 w-4" aria-hidden="true" /> Nova notícia
+        </Button>
+      }
+    >
+      {loading ? (
+        <div className="py-20 text-center text-muted-foreground">Carregando...</div>
+      ) : items.length === 0 ? (
+        <div className="space-y-4 py-20 text-center">
+          <Newspaper className="mx-auto h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
+          <p className="text-muted-foreground">Nenhuma notícia cadastrada ainda.</p>
+          <Button onClick={openCreate} variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" aria-hidden="true" /> Cadastrar primeira
+          </Button>
         </div>
-      </header>
-
-      {}
-      <main className="container mx-auto px-4 md:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Notícias Cadastradas</h1>
-          <p className="text-sm text-muted-foreground mt-1">{items.length} notícia(s) no cadastro</p>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-20 text-muted-foreground">Carregando...</div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-20 space-y-4">
-            <Newspaper className="w-12 h-12 mx-auto text-muted-foreground/40" />
-            <p className="text-muted-foreground">Nenhuma notícia cadastrada ainda.</p>
-            <Button onClick={openCreate} variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" /> Cadastrar primeira
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {items.map((item) => (
-              <div key={item.id} className="rounded-xl border border-border overflow-hidden bg-card">
-                <div className="aspect-video relative overflow-hidden bg-muted">
-                  {item.coverImageUrl ? (
-                    <img src={item.coverImageUrl} alt={item.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Newspaper className="w-10 h-10 text-muted-foreground/30" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-foreground line-clamp-2">{item.title}</p>
-                    <Badge variant={item.published ? 'default' : 'secondary'} className="shrink-0 text-xs">
-                      {item.published ? 'Ativa' : 'Inativa'}
-                    </Badge>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <article key={item.id} className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="relative aspect-video overflow-hidden bg-muted">
+                {item.coverImageUrl ? (
+                  <img src={item.coverImageUrl} alt={item.title} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Newspaper className="h-10 w-10 text-muted-foreground/30" aria-hidden="true" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(item.publishedAt).toLocaleDateString('pt-BR')}
-                  </p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{item.summary}</p>
-                  <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs" onClick={() => openEdit(item)}>
-                      <Pencil className="w-3 h-3" /> Editar
-                    </Button>
-                    {deleteId === item.id ? (
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="gap-1 text-xs px-2"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <Check className="w-3 h-3" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="px-2" onClick={() => setDeleteId(null)}>
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ) : (
+                )}
+              </div>
+              <div className="space-y-2 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="line-clamp-2 font-semibold text-foreground">{item.title}</h2>
+                  <Badge variant={item.published ? 'default' : 'secondary'} className="shrink-0 text-xs">
+                    {item.published ? 'Ativa' : 'Inativa'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(item.publishedAt).toLocaleDateString('pt-BR')}
+                </p>
+                <p className="line-clamp-2 text-xs text-muted-foreground">{item.summary}</p>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 gap-1 text-xs"
+                    onClick={() => openEdit(item)}
+                    aria-label={`Editar notícia ${item.title}`}
+                  >
+                    <Pencil className="h-3 w-3" aria-hidden="true" /> Editar
+                  </Button>
+                  {deleteId === item.id ? (
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="gap-1 px-2 text-xs"
+                        onClick={() => handleDelete(item.id)}
+                        aria-label={`Confirmar exclusão da notícia ${item.title}`}
+                      >
+                        <Check className="h-3 w-3" aria-hidden="true" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => setDeleteId(item.id)}
+                        className="px-2"
+                        onClick={() => setDeleteId(null)}
+                        aria-label={`Cancelar exclusão da notícia ${item.title}`}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <X className="h-3 w-3" aria-hidden="true" />
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDeleteId(item.id)}
+                      aria-label={`Excluir notícia ${item.title}`}
+                    >
+                      <Trash2 className="h-3 w-3" aria-hidden="true" />
+                    </Button>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+            </article>
+          ))}
+        </div>
+      )}
 
-      {}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar Notícia' : 'Nova Notícia'}</DialogTitle>
+            <DialogDescription>
+              As notícias publicadas aparecem na home do site. A imagem de capa é opcional.
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSave} className="space-y-4 pt-2">
             {/* Capa */}
             <div className="space-y-2">
-              <Label>Imagem de capa</Label>
-              <div
-                className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted border-2 border-dashed border-border cursor-pointer hover:border-primary/50 transition-colors"
+              <Label htmlFor="cover-file">Imagem de capa</Label>
+              <button
+                type="button"
                 onClick={() => fileRef.current?.click()}
+                className="block w-full cursor-pointer overflow-hidden rounded-lg border-2 border-dashed border-border bg-muted transition-colors hover:border-primary/50"
               >
                 {coverPreview ? (
-                  <img src={coverPreview} alt="preview" className="w-full h-full object-cover" />
+                  <img
+                    src={coverPreview}
+                    alt="Pré-visualização da imagem de capa"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
-                    <ImagePlus className="w-8 h-8" />
+                  <span className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <ImagePlus className="h-8 w-8" aria-hidden="true" />
                     <span className="text-sm">Clique para selecionar (opcional)</span>
-                  </div>
+                  </span>
                 )}
-              </div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleCover} />
+              </button>
+              <input
+                ref={fileRef}
+                id="cover-file"
+                type="file"
+                accept="image/*"
+                tabIndex={-1}
+                className="sr-only"
+                onChange={handleCover}
+              />
             </div>
 
             <div className="space-y-2">
@@ -290,12 +297,13 @@ export default function AdminNewsPage() {
             <button
               type="button"
               onClick={() => setForm({ ...form, published: !form.published })}
+              aria-pressed={form.published}
               className="flex items-center gap-2 text-sm font-medium"
             >
               {form.published ? (
-                <Eye className="w-4 h-4 text-primary" />
+                <Eye className="h-4 w-4 text-primary" aria-hidden="true" />
               ) : (
-                <EyeOff className="w-4 h-4 text-muted-foreground" />
+                <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               )}
               {form.published ? 'Ativa (visível na Home)' : 'Inativa (oculta da Home)'}
             </button>
@@ -311,6 +319,6 @@ export default function AdminNewsPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminShell>
   )
 }
