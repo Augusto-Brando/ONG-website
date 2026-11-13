@@ -21,6 +21,7 @@ export async function GET() {
   const donationRows = await db
     .select({ campaignId: donations.campaignId, amount: donations.amount })
     .from(donations)
+    .where(eq(donations.status, 'confirmada')) // Pix do site só conta depois de confirmado
 
   const totals = new Map<number, { raised: number; count: number }>()
   for (const donation of donationRows) {

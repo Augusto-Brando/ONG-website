@@ -2,7 +2,7 @@
 // Toda a agregação (count / sum / group by / filtro por mês) é feita no SQL;
 // o JavaScript só monta o objeto e completa os meses sem movimento com zero.
 import { NextResponse } from 'next/server'
-import { gte, sql } from 'drizzle-orm'
+import { and, eq, gte, sql } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
 import { requireArea } from '@/lib/api'
 import { can } from '@/lib/auth'
@@ -134,7 +134,12 @@ export async function GET() {
         quantidade: sql<number>`count(*)::int`,
       })
       .from(donations)
-      .where(sql`to_char(${donations.receivedAt}, 'YYYY-MM') = to_char(current_date, 'YYYY-MM')`)
+      .where(
+        and(
+          eq(donations.status, 'confirmada'),
+          sql`to_char(${donations.receivedAt}, 'YYYY-MM') = to_char(current_date, 'YYYY-MM')`,
+        ),
+      )
 
     const porMesRows = await db
       .select({
@@ -142,7 +147,7 @@ export async function GET() {
         total: sql<string>`coalesce(sum(${donations.amount}), 0)`,
       })
       .from(donations)
-      .where(gte(donations.receivedAt, inicio))
+      .where(and(eq(donations.status, 'confirmada'), gte(donations.receivedAt, inicio)))
       .groupBy(sql`to_char(${donations.receivedAt}, 'YYYY-MM')`)
       .orderBy(sql`to_char(${donations.receivedAt}, 'YYYY-MM')`)
 

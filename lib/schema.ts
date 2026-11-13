@@ -46,6 +46,8 @@ export const inventoryCategory = pgEnum('inventory_category', [
 ])
 export const movementType = pgEnum('movement_type', ['entrada', 'saida'])
 export const donationType = pgEnum('donation_type', ['dinheiro', 'racao', 'medicamento', 'material', 'outro'])
+// Doação feita pelo site (Pix) nasce 'pendente' e só conta nos totais depois de 'confirmada' pela equipe.
+export const donationStatus = pgEnum('donation_status', ['pendente', 'confirmada', 'recusada'])
 export const paymentMethod = pgEnum('payment_method', ['pix', 'dinheiro', 'transferencia', 'cartao', 'outro'])
 export const transactionKind = pgEnum('transaction_kind', ['receita', 'despesa'])
 export const adoptionStage = pgEnum('adoption_stage', [
@@ -202,9 +204,11 @@ export const donations = pgTable(
     method: paymentMethod('method'),
     campaignId: integer('campaign_id').references(() => campaigns.id, { onDelete: 'set null' }),
     receivedAt: date('received_at').notNull(),
+    status: donationStatus('status').notNull().default('confirmada'),
+    pixTxid: text('pix_txid'), // identificador do Pix gerado no site (aparece no extrato)
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [index('donations_received_idx').on(t.receivedAt)],
+  (t) => [index('donations_received_idx').on(t.receivedAt), index('donations_status_idx').on(t.status)],
 )
 
 export const transactions = pgTable(
@@ -322,5 +326,6 @@ export type Interaction = typeof interactions.$inferSelect
 export type Volunteer = typeof volunteers.$inferSelect
 export type News = typeof news.$inferSelect
 export type NewNews = typeof news.$inferInsert
+export type DonationStatus = (typeof donationStatus.enumValues)[number]
 export type UserRole = (typeof userRole.enumValues)[number]
 export type AdoptionStage = (typeof adoptionStage.enumValues)[number]

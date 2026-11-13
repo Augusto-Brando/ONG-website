@@ -61,6 +61,8 @@ export async function GET(req: Request) {
       method: donations.method,
       campaignId: donations.campaignId,
       receivedAt: donations.receivedAt,
+      status: donations.status,
+      pixTxid: donations.pixTxid,
       campaignTitle: campaigns.title,
     })
     .from(donations)
@@ -79,6 +81,8 @@ export async function GET(req: Request) {
     method: row.method,
     campaignId: row.campaignId,
     receivedAt: row.receivedAt,
+    status: row.status,
+    pixTxid: row.pixTxid,
     campaign: row.campaignId === null ? null : { id: row.campaignId, title: row.campaignTitle ?? '' },
   }))
 

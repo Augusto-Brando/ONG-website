@@ -57,7 +57,8 @@ export async function PUT(req: Request, { params }: Ctx) {
     .orderBy(asc(transactions.id))
   const [linked, ...duplicates] = linkedRows
   const amount = data.amount ?? 0
-  const geraReceita = data.type === 'dinheiro' && amount > 0
+  // Doação pendente (Pix do site ainda não conferido) ou recusada não gera receita.
+  const geraReceita = updated.status === 'confirmada' && data.type === 'dinheiro' && amount > 0
 
   if (geraReceita) {
     const values = {

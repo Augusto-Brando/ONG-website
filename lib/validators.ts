@@ -167,3 +167,18 @@ export const volunteerInput = z.object({
 
 /** Etapas que encerram a solicitação (gravam `closedAt`). */
 export const CLOSED_STAGES = ['adotado', 'recusado', 'desistiu'] as const
+
+// Doações por Pix feitas no site ----------------------------------------------------
+/** "Já fiz o Pix": registra a doação como pendente até a equipe conferir no extrato. */
+export const publicPixDonationInput = z.object({
+  valor: z.coerce.number().min(1, 'Valor mínimo de R$ 1,00').max(100000),
+  txid: z.string().regex(/^[A-Z0-9]{8,25}$/, 'Identificador do Pix inválido'),
+  campaignId: z.coerce.number().int().positive().optional().nullable(),
+  nome: z.string().trim().max(120).optional().nullable(),
+  email: z.string().trim().toLowerCase().email().optional().nullable().or(z.literal('')),
+  website: z.string().max(0).optional(), // honeypot anti-spam
+})
+
+export const donationStatusInput = z.object({
+  status: z.enum(['confirmada', 'recusada']),
+})
