@@ -359,6 +359,42 @@ async function main() {
     (await api('/api/public/transparencia')).text(),
   ])
   check('respostas publicas sem e-mail', 0, (corposPublicos.join(' ').match(/@/g) || []).length)
+
+  console.log('== Site publico (redesign)')
+  // Paginas que devem responder 200 sem login
+  check('GET /', 200, await status('/'))
+  check('GET /animais', 200, await status('/animais'))
+  check('GET /animais?especie=gato', 200, await status('/animais?especie=gato'))
+  check('GET /doe', 200, await status('/doe'))
+  check('GET /adotar', 200, await status('/adotar'))
+  check('GET /adotar?animal=1', 200, await status('/adotar?animal=1'))
+
+  // Detalhe do animal: existente e inexistente
+  check('GET /animais/1', 200, await status('/animais/1'))
+  check('GET /animais/9999', 404, await status('/animais/9999'))
+
+  // Animal fora da vitrine (available: false) deve dar 404 na rota publica
+  const dogsAll = await json('/api/dogs', { user: 'admin' })
+  const unavailableDog = dogsAll.find((d) => d.available === false)
+  if (unavailableDog) {
+    check(`GET /animais/${unavailableDog.id} (fora da vitrine) -> 404`, 404, await status(`/animais/${unavailableDog.id}`))
+  } else {
+    console.log('  pular GET /animais/<fora-da-vitrine> (nenhum animal com available:false)')
+    skipped += 1
+  }
+
+  // Conteudo especifico no HTML
+  const homeHtml = await (await api('/')).text()
+  check('home contem "Todo focinho merece um"', 'sim', homeHtml.includes('Todo focinho merece um') ? 'sim' : 'nao')
+
+  const doeHtml = await (await api('/doe')).text()
+  check('doe contem CNPJ 48.118.169/0001-77', 'sim', doeHtml.includes('48.118.169/0001-77') ? 'sim' : 'nao')
+
+  // /animais?especie=gato nao deve listar cães disponiveis
+  const gatosHtml = await (await api('/animais?especie=gato')).text()
+  const availableDogs = dogsAll.filter((d) => d.available && d.status !== 'adotado' && d.status !== 'indisponivel')
+  const anyDogInGatos = availableDogs.some((d) => gatosHtml.includes(d.name))
+  check('animais?especie=gato nao lista caes', 'nao', anyDogInGatos ? 'sim' : 'nao')
 }
 
 try {
