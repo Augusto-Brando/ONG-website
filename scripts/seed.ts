@@ -6,12 +6,36 @@ import { hashPassword } from '../lib/auth'
 import { sql } from 'drizzle-orm'
 
 const url = process.env.DATABASE_URL ?? ''
-if (!isLocalUrl(url)) {
+// Banco de DEMONSTRAÇÃO remoto (ex.: Neon só para mostrar o sistema): exige --demo E passa pela
+// trava de dados abaixo. Sem --demo, só banco local.
+const modoDemo = process.argv.includes('--demo')
+if (!isLocalUrl(url) && !modoDemo) {
   console.error('seed: DATABASE_URL não é local. Abortado para proteger a produção.')
   process.exit(1)
 }
+// Senha dos logins de teste (em demonstração pública, defina SEED_SENHA com uma senha forte).
+const senhaTeste = process.env.SEED_SENHA || 'ong12345'
 
 const db = getDb()
+
+/** Trava do modo demo: só aceita banco vazio ou que já seja de demonstração (tem admin@ong.local). */
+async function confereBancoDemo() {
+  const linhas = async (q: ReturnType<typeof sql>) => {
+    try {
+      const r = (await db.execute(q)) as unknown as { rows?: { n: number }[] } | { n: number }[]
+      const rows = Array.isArray(r) ? r : (r.rows ?? [])
+      return Number(rows[0]?.n ?? 0)
+    } catch {
+      return 0 // tabela ainda não existe
+    }
+  }
+  const animais = await linhas(sql`select count(*)::int as n from dogs`)
+  const demo = await linhas(sql`select count(*)::int as n from users where email = 'admin@ong.local'`)
+  if (animais > 0 && demo === 0) {
+    console.error('seed --demo: o banco tem animais e não é de demonstração. Abortado (pode ser a produção).')
+    process.exit(1)
+  }
+}
 const d = (offsetDays: number) => {
   const dt = new Date()
   dt.setDate(dt.getDate() + offsetDays)
@@ -19,13 +43,14 @@ const d = (offsetDays: number) => {
 }
 
 async function main() {
+  if (modoDemo && !isLocalUrl(url)) await confereBancoDemo()
   console.log('Limpando tabelas...')
   await db.execute(sql`TRUNCATE audit_log, interactions, adoption_requests, adopters, transactions,
     inventory_movements, donations, campaigns, inventory_items, treatments, volunteers, news, dogs, users
     RESTART IDENTITY CASCADE`)
 
   console.log('Usuários...')
-  const senha = await hashPassword('ong12345')
+  const senha = await hashPassword(senhaTeste)
   const [admin, voluntaria] = await db
     .insert(s.users)
     .values([
