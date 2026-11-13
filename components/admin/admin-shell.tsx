@@ -1,41 +1,20 @@
-'use client'
+﻿'use client'
 
-// Casca única do painel: cabeçalho, navegação filtrada pelo perfil e botão de sair.
-// Toda página nova de /admin deve envolver o conteúdo com <AdminShell title="...">.
 import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import {
-  BarChart3,
-  Boxes,
-  HandCoins,
-  HeartHandshake,
-  LayoutDashboard,
-  LogOut,
-  Newspaper,
-  PawPrint,
-  Stethoscope,
-  Users,
-  UserCog,
-  Wallet,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { can, type Area } from '@/lib/auth'
+import { useRouter } from 'next/navigation'
+import { Layout } from '@astryxdesign/core/Layout'
+import { VStack, HStack } from '@astryxdesign/core/Stack'
+import { Drawer } from '@astryxdesign/core/Drawer'
+import { Button } from '@astryxdesign/core/Button'
+import { Heading, Text } from '@astryxdesign/core/Text'
+import { Icon } from '@astryxdesign/core/Icon'
+import { InternationalizationProvider } from '@astryxdesign/core/i18n'
+import ptBR from '@astryxdesign/core/locales/pt-BR.generated.js'
+import { AlertTriangle, Menu, X } from 'lucide-react'
 import type { UserRole } from '@/lib/schema'
-
-const NAV: { href: string; label: string; area: Area; icon: typeof PawPrint }[] = [
-  { href: '/admin/painel', label: 'Painel', area: 'dashboard', icon: LayoutDashboard },
-  { href: '/admin', label: 'Animais', area: 'animais', icon: PawPrint },
-  { href: '/admin/tratamentos', label: 'Tratamentos', area: 'tratamentos', icon: Stethoscope },
-  { href: '/admin/adocoes', label: 'Adoções', area: 'adocoes', icon: HeartHandshake },
-  { href: '/admin/doacoes', label: 'Doações', area: 'doacoes', icon: HandCoins },
-  { href: '/admin/financeiro', label: 'Financeiro', area: 'financeiro', icon: Wallet },
-  { href: '/admin/estoque', label: 'Estoque', area: 'estoque', icon: Boxes },
-  { href: '/admin/voluntarios', label: 'Voluntários', area: 'voluntarios', icon: Users },
-  { href: '/admin/news', label: 'Notícias', area: 'noticias', icon: Newspaper },
-  { href: '/admin/reports', label: 'Relatórios', area: 'relatorios', icon: BarChart3 },
-  { href: '/admin/usuarios', label: 'Usuários', area: 'usuarios', icon: UserCog },
-]
+import { PularConteudo } from '@/components/site/PularConteudo'
+import { Navegacao } from './shell/Navegacao'
 
 export type Me = { uid: number; name: string; role: UserRole }
 
@@ -43,98 +22,66 @@ export function useMe() {
   const [me, setMe] = useState<Me | null>(null)
   useEffect(() => {
     fetch('/api/auth')
-      .then((r) => (r.ok ? r.json() : null))
+      .then(r => r.ok ? r.json() : null)
       .then(setMe)
       .catch(() => setMe(null))
   }, [])
   return me
 }
 
-export function AdminShell({
-  title,
-  description,
-  actions,
-  children,
-}: {
+export function AdminShell({ title, description, actions, children }: {
   title: string
   description?: string
   actions?: ReactNode
   children: ReactNode
 }) {
   const router = useRouter()
-  const pathname = usePathname()
   const me = useMe()
+  const [aberto, setAberto] = useState(false)
+  const [saindo, setSaindo] = useState(false)
+  const [erro, setErro] = useState('')
 
   async function handleLogout() {
-    await fetch('/api/auth', { method: 'DELETE' })
-    router.push('/admin/login')
+    setSaindo(true)
+    setErro('')
+    try {
+      const res = await fetch('/api/auth', { method: 'DELETE' })
+      if (!res.ok) throw new Error('Falha ao sair')
+      router.push('/admin/login')
+    } catch {
+      setErro('Não foi possível sair agora. Tente de novo.')
+      setSaindo(false)
+    }
   }
 
-  const items = me ? NAV.filter((i) => can(me.role, i.area)) : []
+  const navegacao = <Navegacao me={me} saindo={saindo} onSair={handleLogout} onNavegar={() => setAberto(false)} />
 
-  return (
-    <div className="min-h-screen bg-background">
-      <a
-        href="#conteudo"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
-      >
-        Pular para o conteúdo
-      </a>
-      <header className="sticky top-0 z-10 border-b border-border bg-background/95">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
-            <img src="/logo.jpeg" alt="" className="h-10 w-auto object-contain" />
-            <div>
-              <p className="font-bold leading-none text-primary">Admin</p>
-              <p className="text-xs text-muted-foreground">Amor não tem Raça</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {me && (
-              <span className="hidden text-sm text-muted-foreground sm:inline">
-                {me.name} · {me.role}
-              </span>
-            )}
-            <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sair">
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        <nav aria-label="Módulos do painel" className="container mx-auto overflow-x-auto px-4 md:px-8">
-          <ul className="flex gap-1 pb-2">
-            {items.map(({ href, label, icon: Icon }) => {
-              const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
-              return (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    aria-current={active ? 'page' : undefined}
-                    className={`flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      active
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    {label}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-      </header>
-
-      <main id="conteudo" className="container mx-auto px-4 py-8 md:px-8">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-            {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-          </div>
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-        </div>
-        {children}
+  return <InternationalizationProvider locale="pt-BR" messages={{ 'pt-BR': ptBR }}><VStack gap={0} className="min-h-dvh min-w-0 bg-(--ant-creme) text-(--ant-tinta)">
+    <PularConteudo />
+    <HStack as="header" gap={3} hAlign="between" vAlign="center" className="sticky top-0 z-20 border-b border-(--ant-areia) bg-(--ant-creme) p-4 md:hidden">
+      <Link href="/admin/painel" aria-label="Amor Não Tem Raça, painel"><img src="/logo.svg" alt="Amor Não Tem Raça" className="h-12 w-auto" /></Link>
+      <Button label="Abrir navegação" aria-label="Abrir navegação" icon={<Icon icon={Menu} />} isIconOnly variant="secondary" className="min-h-11 min-w-11" aria-expanded={aberto} aria-controls="navegacao-painel" onClick={() => setAberto(true)} />
+    </HStack>
+    {/* Layout mantém o main#conteudo exigido pelo projeto; AppShell usa um id interno fixo. */}
+    <Layout height="auto" padding={0} className="min-w-0 flex-1" start={
+      <VStack className="sticky top-0 hidden h-dvh w-72 shrink-0 border-r border-(--ant-areia) md:flex">{navegacao}</VStack>
+    } content={
+      <main id="conteudo" tabIndex={-1} className="min-w-0 max-w-full flex-1 p-4 md:p-8">
+        <VStack gap={6} className="min-w-0 rounded-(--ant-raio-cartao) bg-(--ant-branco) p-4 md:p-6">
+          <HStack gap={3} wrap="wrap" hAlign="between" vAlign="start">
+            <VStack gap={1} className="min-w-0"><Heading level={1} className="break-words">{title}</Heading>{description && <Text size="sm" color="secondary">{description}</Text>}</VStack>
+            {actions && <HStack gap={2} wrap="wrap" className="max-w-full">{actions}</HStack>}
+          </HStack>
+          {erro && <Text role="alert"><Icon icon={AlertTriangle} /> {erro}</Text>}
+          {children}
+        </VStack>
       </main>
-    </div>
-  )
+    } />
+    <Drawer id="navegacao-painel" isOpen={aberto} onOpenChange={setAberto} label="Navegação do painel" side="start" width="calc(var(--ant-esp-9) * 3)" padding={0}>
+      <VStack gap={0} className="h-full bg-(--ant-creme)">
+        <HStack hAlign="end" className="p-3"><Button label="Fechar navegação" aria-label="Fechar navegação" icon={<Icon icon={X} />} isIconOnly variant="ghost" className="min-h-11 min-w-11" onClick={() => setAberto(false)} /></HStack>
+        {navegacao}
+      </VStack>
+    </Drawer>
+  </VStack></InternationalizationProvider>
 }

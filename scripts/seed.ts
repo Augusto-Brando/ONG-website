@@ -142,6 +142,7 @@ async function main() {
     { kind: 'receita', category: 'doacao', description: 'Doação João P. (castração)', amount: '300.00', date: d(-40), donationId: doacoes[3].id },
     { kind: 'receita', category: 'doacao', description: 'Doação Carla M. (Natal)', amount: '80.00', date: d(-3), donationId: doacoes[5].id },
     { kind: 'receita', category: 'bazar', description: 'Bazar beneficente', amount: '620.00', date: d(-18) },
+    { kind: 'receita', category: 'evento', description: 'Rifa solidária', amount: '1450.00', date: d(-2) },
     { kind: 'despesa', category: 'veterinario', description: 'Vacina V10 - Thor', amount: '90.00', date: d(-30), treatmentId: trats[0].id },
     { kind: 'despesa', category: 'veterinario', description: 'Antibiótico - Floquinho', amount: '60.00', date: d(-7), treatmentId: trats[3].id },
     { kind: 'despesa', category: 'racao', description: 'Compra de ração filhote', amount: '180.00', date: d(-14) },
