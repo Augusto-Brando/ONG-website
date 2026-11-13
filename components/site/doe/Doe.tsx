@@ -4,7 +4,7 @@
 // transparência. Os números vêm das APIs públicas.
 import { useCallback, useEffect, useState } from 'react'
 import { BotaoLink } from '@/components/marca/Botao'
-import { CopiarPix } from '@/components/marca/CopiarPix'
+import { PixComValor } from './PixComValor'
 import { EstadoErro } from '@/components/marca/EstadoErro'
 import { NotaManuscrita } from '@/components/marca/NotaManuscrita'
 import { Sol } from '@/components/marca/Sol'
@@ -127,9 +127,9 @@ export function Doe() {
             Doe por Pix
           </h2>
           <p style={{ margin: 0, color: 'var(--ant-tinta-suave)' }}>
-            Copie a chave e pague pelo app do seu banco. A chave é o CNPJ da ONG.
+            Gere um código com o valor e pague pelo app do seu banco.
           </p>
-          <CopiarPix />
+          <PixComValor />
         </div>
 
         <div

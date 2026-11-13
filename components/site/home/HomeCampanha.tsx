@@ -1,7 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { BotaoLink } from '@/components/marca/Botao'
+import { Botao, BotaoLink } from '@/components/marca/Botao'
+import { VStack } from '@astryxdesign/core/Stack'
+import { PixComValor } from '@/components/site/doe/PixComValor'
 import { CopiarPix } from '@/components/marca/CopiarPix'
 import { NotaManuscrita } from '@/components/marca/NotaManuscrita'
 import { Sol } from '@/components/marca/Sol'
@@ -81,6 +83,7 @@ export function HomeCampanha() {
   const [campanha, setCampanha] = useState<Campanha | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [falhou, setFalhou] = useState(false)
+  const [pixAberto, setPixAberto] = useState(false)
 
   const carregar = useCallback(async () => {
     setCarregando(true)
@@ -185,6 +188,8 @@ export function HomeCampanha() {
                 <div style={{ maxWidth: '560px', marginTop: 'var(--ant-esp-2)' }}>
                   <MetaCampanha arrecadado={campanha.raised} meta={campanha.goalAmount} />
                 </div>
+                <Botao variacao="azul" aria-expanded={pixAberto} aria-controls="pix-home-campanha" onClick={() => setPixAberto(!pixAberto)}>{pixAberto ? 'Fechar doação' : 'Doar para esta campanha'}</Botao>
+                {pixAberto && <VStack id="pix-home-campanha"><PixComValor campanha={campanha} variante="escuro" /></VStack>}
               </>
             ) : (
               <>

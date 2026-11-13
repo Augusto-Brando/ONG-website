@@ -34,14 +34,22 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
   if (data.status === 'confirmada' && Number(atualizada.amount ?? 0) > 0) {
     const nome = atualizada.donorName?.trim()
-    await db.insert(transactions).values({
-      kind: 'receita',
-      category: 'doacao',
-      description: `Doação de ${nome && nome.length > 0 ? nome : 'Anônimo'} (Pix pelo site)`,
-      amount: atualizada.amount!,
-      date: atualizada.receivedAt,
-      donationId: atualizada.id,
-    })
+    try {
+      await db.insert(transactions).values({
+        kind: 'receita',
+        category: 'doacao',
+        description: `Doação de ${nome && nome.length > 0 ? nome : 'Anônimo'} (Pix pelo site)`,
+        amount: atualizada.amount!,
+        date: atualizada.receivedAt,
+        donationId: atualizada.id,
+      })
+    } catch (e) {
+      // Compensação (sem transação no driver de produção): sem a receita, a doação volta a pendente
+      // para a equipe poder confirmar de novo.
+      console.error('Falha ao lançar a receita do Pix confirmado', e)
+      await db.update(donations).set({ status: 'pendente' }).where(eq(donations.id, id)).catch(() => {})
+      return NextResponse.json({ error: 'Não foi possível lançar a receita. Tente confirmar de novo.' }, { status: 500 })
+    }
   }
 
   await audit(auth, data.status === 'confirmada' ? 'pix_confirmado' : 'pix_recusado', 'donations', id, {

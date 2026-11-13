@@ -2,6 +2,8 @@
 
 export type DonationRow = {
   id: number
+  status: 'pendente' | 'confirmada' | 'recusada'
+  pixTxid: string | null
   donorName: string | null
   donorEmail: string | null
   donorPhone: string | null
@@ -13,6 +15,8 @@ export type DonationRow = {
   receivedAt: string
   campaign: { id: number; title: string } | null
 }
+
+export const DONATION_STATUS = { pendente: 'Pendente', confirmada: 'Confirmada', recusada: 'Recusada' }
 
 export type DonationForm = {
   donorName: string

@@ -3,6 +3,10 @@
 // Faixa de campanhas ativas com barra de meta. Os números vêm da API pública.
 import { BarraMeta } from '@/components/marca/ImpactoEMeta'
 import { Sol } from '@/components/marca/Sol'
+import { useState } from 'react'
+import { Botao } from '@/components/marca/Botao'
+import { VStack } from '@astryxdesign/core/Stack'
+import { PixComValor } from './PixComValor'
 
 export type CampanhaPublica = {
   id: number
@@ -21,6 +25,7 @@ const data = (iso: string) => {
 }
 
 export function FaixaCampanhas({ campanhas }: { campanhas: CampanhaPublica[] }) {
+  const [aberta, setAberta] = useState<number | null>(null)
   return (
     <section
       className="relative overflow-hidden"
@@ -73,6 +78,10 @@ export function FaixaCampanhas({ campanhas }: { campanhas: CampanhaPublica[] }) 
               <p style={{ margin: 0, color: 'var(--ant-sol-suave)' }}>{campanha.description}</p>
             ) : null}
             <BarraMeta arrecadado={campanha.raised} meta={campanha.goalAmount} escuro />
+            <Botao variacao="azul" aria-expanded={aberta === campanha.id} aria-controls={`pix-campanha-${campanha.id}`} onClick={() => setAberta(aberta === campanha.id ? null : campanha.id)}>
+              {aberta === campanha.id ? 'Fechar doação' : 'Doar para esta campanha'}
+            </Botao>
+            {aberta === campanha.id && <VStack id={`pix-campanha-${campanha.id}`}><PixComValor campanha={campanha} variante="escuro" /></VStack>}
             <p style={{ margin: 0, fontSize: 'var(--ant-texto-xs)', color: 'var(--ant-sol-suave)' }}>
               {campanha.donationsCount === 1 ? '1 doação' : `${campanha.donationsCount} doações`} ·{' '}
               {data(campanha.startDate)}

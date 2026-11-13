@@ -6,6 +6,7 @@ export const PIX_ONG = {
   chave: '48118169000177', // CNPJ 48.118.169/0001-77, só dígitos
   nome: 'AMOR NAO TEM RACA', // até 25 caracteres, sem acento
   cidade: 'JUIZ DE FORA', // até 15 caracteres, sem acento
+  chaveFormatada: '48.118.169/0001-77', // para exibir (os bancos aceitam com ou sem pontuação)
 } as const
 
 function campo(id: string, valor: string): string {

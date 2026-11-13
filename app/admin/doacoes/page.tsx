@@ -9,6 +9,7 @@ import { CampaignCards } from '@/components/admin/doacoes/campaign-cards'
 import { CampaignDialog } from '@/components/admin/doacoes/campaign-dialog'
 import { DonationDialog } from '@/components/admin/doacoes/donation-dialog'
 import { DonationTable } from '@/components/admin/doacoes/donation-table'
+import { PendingPix } from '@/components/admin/doacoes/pending-pix'
 import { DONATION_TYPES, type CampaignRow, type DonationRow } from '@/components/admin/doacoes/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,8 @@ export default function DoacoesPage() {
   const [filters, setFilters] = useState<Filters>(emptyFilters)
 
   const [donations, setDonations] = useState<DonationRow[]>([])
+  const [pending, setPending] = useState<DonationRow[]>([])
+  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null)
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([])
   const [loadingDonations, setLoadingDonations] = useState(true)
   const [loadingCampaigns, setLoadingCampaigns] = useState(true)
@@ -48,6 +51,11 @@ export default function DoacoesPage() {
       }
       const data = await res.json()
       setDonations(Array.isArray(data) ? data : [])
+      // A fila independe dos filtros de período e tipo da tabela geral.
+      const allRes = params.size ? await fetch('/api/donations') : null
+      if (allRes && !allRes.ok) throw new Error('Falha ao carregar a fila Pix')
+      const all: DonationRow[] = allRes ? await allRes.json() : data
+      setPending(all.filter(row => row.status === 'pendente'))
     } catch {
       toast.error('Erro de conexão ao carregar as doações.')
     } finally {
@@ -147,6 +155,27 @@ export default function DoacoesPage() {
     }
   }
 
+  async function handlePixStatus(row: DonationRow, status: 'confirmada' | 'recusada') {
+    if (updatingStatus !== null) return
+    if (status === 'recusada' && !confirm(`Recusar o Pix ${row.pixTxid || row.id}? Confira antes se ele aparece no extrato.`)) return
+    setUpdatingStatus(row.id)
+    try {
+      const res = await fetch(`/api/donations/${row.id}/status`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
+      })
+      if (res.ok) toast.success(status === 'confirmada' ? 'Pix confirmado. Campanha e financeiro atualizados.' : 'Pix recusado.')
+      else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || 'Não foi possível atualizar o Pix.')
+      }
+      await Promise.all([loadDonations(filters), loadCampaigns()])
+    } catch {
+      toast.error('Erro de conexão ao atualizar o Pix. Recarregue a lista antes de tentar de novo.')
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
+
   return (
     <AdminShell
       title="Doações"
@@ -163,6 +192,7 @@ export default function DoacoesPage() {
         )
       }
     >
+      <PendingPix rows={pending} loading={loadingDonations} busy={updatingStatus} onStatus={handlePixStatus} />
       <Tabs value={tab} onValueChange={setTab} className="gap-4">
         <TabsList>
           <TabsTrigger value="doacoes">Doações</TabsTrigger>

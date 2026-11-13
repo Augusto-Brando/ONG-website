@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatDate, formatMoney, label } from '@/lib/format'
-import type { DonationRow } from './types'
+import { DONATION_STATUS, type DonationRow } from './types'
 
 function donorName(row: DonationRow): string {
   const nome = row.donorName?.trim()
@@ -54,6 +54,7 @@ export function DonationTable({
             <TableHead className="text-right">Valor</TableHead>
             <TableHead>Forma</TableHead>
             <TableHead>Campanha</TableHead>
+            <TableHead>Situação</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -71,6 +72,9 @@ export function DonationTable({
               <TableCell>{label(row.method)}</TableCell>
               <TableCell className="max-w-[220px] truncate" title={row.campaign?.title ?? undefined}>
                 {row.campaign?.title || '—'}
+              </TableCell>
+              <TableCell className="text-right">
+                <Badge variant="outline">{DONATION_STATUS[row.status]}</Badge>
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
