@@ -5,6 +5,11 @@ import * as s from '../lib/schema'
 import { hashPassword } from '../lib/auth'
 import { sql } from 'drizzle-orm'
 
+// Carrega o .env local se existir (no CI as variáveis já vêm do ambiente). Não sobrescreve as já definidas.
+try {
+  process.loadEnvFile('.env')
+} catch {}
+
 const url = process.env.DATABASE_URL ?? ''
 // Banco de DEMONSTRAÇÃO remoto (ex.: Neon só para mostrar o sistema): exige --demo E passa pela
 // trava de dados abaixo. Sem --demo, só banco local.

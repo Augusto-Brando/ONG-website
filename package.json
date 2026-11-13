@@ -13,7 +13,7 @@
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "db:seed": "tsx --env-file=.env scripts/seed.ts",
+    "db:seed": "tsx scripts/seed.ts",
     "db:up": "docker compose up -d --wait",
     "db:backup": "node scripts/backup.mjs",
     "db:restore": "node scripts/restore.mjs",
