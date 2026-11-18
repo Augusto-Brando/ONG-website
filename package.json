@@ -17,6 +17,7 @@
     "db:up": "docker compose up -d --wait",
     "db:backup": "node scripts/backup.mjs",
     "db:restore": "node scripts/restore.mjs",
+    "db:implantar": "node scripts/implantar-producao.mjs",
     "test:e2e": "node scripts/e2e.mjs",
     "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs",
     "theme:build": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs theme build themes/amor/amorTheme.ts"
