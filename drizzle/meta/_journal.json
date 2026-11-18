@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794498885175,
+      "tag": "0000_inicial",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794499095729,
+      "tag": "0001_erp_crm",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794539080972,
+      "tag": "0002_doacao_pix",
+      "breakpoints": true
+    }
+  ]
+}

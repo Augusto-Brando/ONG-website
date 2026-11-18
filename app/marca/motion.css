@@ -1,0 +1,113 @@
+/*
+ * Amor Não Tem Raça · movimento
+ * Curva única ease-in-out: var(--ant-curva) = cubic-bezier(.65, 0, .35, 1)
+ * Requer tokens.css. Toda animação tem alternativa em prefers-reduced-motion no fim do arquivo.
+ */
+
+/* Entrada de seções e itens (adicione .ant-visivel via IntersectionObserver, uma vez) */
+@keyframes ant-subir {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+.ant-entrada { opacity: 0; }
+.ant-entrada.ant-visivel {
+  animation: ant-subir var(--ant-dur-entrada) var(--ant-curva) both;
+  animation-delay: calc(var(--ant-i, 0) * var(--ant-atraso-escalonado));
+}
+/* Use style="--ant-i: 0|1|2..." em cada item para escalonar */
+
+/* Botões: hover sobe, clique afunda */
+.ant-botao {
+  transition:
+    transform var(--ant-dur-rapida) var(--ant-curva),
+    filter var(--ant-dur-rapida) var(--ant-curva),
+    background-color var(--ant-dur-rapida) var(--ant-curva),
+    color var(--ant-dur-rapida) var(--ant-curva),
+    box-shadow var(--ant-dur-rapida) var(--ant-curva);
+}
+.ant-botao:hover { transform: translateY(-3px); filter: brightness(1.05) saturate(1.05); }
+.ant-botao:active { transform: translateY(2px) scale(0.97); filter: brightness(0.96); transition-duration: var(--ant-dur-clique); }
+.ant-botao--acao:active { box-shadow: 0 1px 0 var(--ant-acao-sombra); }
+
+/* Link com seta */
+.ant-seta { display: inline-block; transition: transform var(--ant-dur-rapida) var(--ant-curva); }
+a:hover .ant-seta, button:hover .ant-seta { transform: translateX(6px); }
+
+/* Botão de ícone */
+.ant-botao-icone { transition: transform var(--ant-dur-rapida) var(--ant-curva); }
+.ant-botao-icone:hover { transform: translateY(-3px) rotate(-6deg); }
+.ant-botao-icone:active { transform: scale(0.9); transition-duration: var(--ant-dur-clique); }
+
+/* Polaroide: endireita, sobe e cresce no hover */
+.ant-polaroide--interativa {
+  transform: rotate(var(--ant-inclinacao, -2deg));
+  transition:
+    transform var(--ant-dur-media) var(--ant-curva),
+    box-shadow var(--ant-dur-media) var(--ant-curva);
+}
+.ant-polaroide--interativa:hover,
+.ant-polaroide--interativa:focus-within {
+  transform: rotate(0deg) translateY(-6px) scale(1.03);
+  box-shadow: 0 18px 34px rgba(18, 35, 52, 0.20);
+}
+
+/* Coração "quero conhecer": troque a classe a cada clique para reiniciar */
+@keyframes ant-pulo {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.ant-pulo { animation: ant-pulo var(--ant-dur-media) var(--ant-curva); }
+.ant-coracao path { transition: fill var(--ant-dur-rapida) var(--ant-curva); }
+
+/* Aparecer (cartões após carregar, ícone de confirmação) */
+@keyframes ant-aparecer {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+.ant-aparecer { animation: ant-aparecer 500ms var(--ant-curva) both; }
+
+/* Barra de meta: anime a largura de 0 até o valor ao entrar na tela */
+.ant-barra-preenchimento { transition: width var(--ant-dur-barra) var(--ant-curva); }
+
+/* Etapas do formulário: trilho que desliza */
+.ant-trilho { display: flex; transition: transform var(--ant-dur-passo) var(--ant-curva); }
+
+/* Carregando */
+@keyframes ant-pulsar { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.ant-esqueleto {
+  background: var(--ant-esqueleto);
+  animation: ant-pulsar 1.6s var(--ant-curva) infinite;
+}
+
+/* Sol girando devagar (decorativo, linear de propósito) */
+@keyframes ant-girar { to { transform: rotate(360deg); } }
+.ant-sol--girando { animation: ant-girar 60s linear infinite; }
+
+/* Spinner do botão "Enviando…" */
+.ant-spinner { animation: ant-girar 1s linear infinite; }
+
+/* Movimento reduzido: tudo aparece no estado final, só cores mudam */
+@media (prefers-reduced-motion: reduce) {
+  .ant-entrada { opacity: 1; }
+  .ant-entrada.ant-visivel,
+  .ant-pulo,
+  .ant-aparecer,
+  .ant-esqueleto,
+  .ant-sol--girando { animation: none; }
+  .ant-spinner { animation-duration: 3s; }
+  .ant-botao,
+  .ant-botao-icone,
+  .ant-polaroide--interativa,
+  .ant-barra-preenchimento,
+  .ant-trilho,
+  .ant-seta { transition: background-color 1ms, color 1ms, box-shadow 1ms; }
+  .ant-botao:hover,
+  .ant-botao:active,
+  .ant-botao-icone:hover,
+  .ant-botao-icone:active,
+  a:hover .ant-seta,
+  button:hover .ant-seta { transform: none; }
+  .ant-polaroide--interativa:hover,
+  .ant-polaroide--interativa:focus-within { transform: rotate(var(--ant-inclinacao, -2deg)); }
+}

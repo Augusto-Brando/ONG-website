@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { requireArea } from '@/lib/api'
 import { news } from '@/lib/schema'
-import { put, del } from '@vercel/blob'
+import { del } from '@vercel/blob'
+import { isAllowedImage, uploadFile } from '@/lib/upload'
 import { eq } from 'drizzle-orm'
 
 function slugify(title: string) {
@@ -13,6 +15,8 @@ function isVercelBlob(url?: string | null) {
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('noticias')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const newsId = parseInt(id)
   const formData = await req.formData()
@@ -29,7 +33,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   let coverImageUrl = (formData.get('coverImageUrl') as string) || ''
   const file = formData.get('cover') as File | null
-  if (file && file.size > 0) {
+  if (file instanceof File && isAllowedImage(file)) {
     const [cur] = await db.select({ coverImageUrl: news.coverImageUrl }).from(news).where(eq(news.id, newsId))
     if (isVercelBlob(cur?.coverImageUrl)) {
       try {
@@ -38,7 +42,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
     }
     const ext = file.name.split('.').pop()
-    const { url } = await put(`news/${slugify(title)}-${Date.now()}.${ext}`, file, { access: 'public' })
+    const url = await uploadFile(`news/${slugify(title)}-${Date.now()}.${ext}`, file)
     coverImageUrl = url
   }
 
@@ -52,6 +56,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('noticias')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const newsId = parseInt(id)
   const db = getDb()

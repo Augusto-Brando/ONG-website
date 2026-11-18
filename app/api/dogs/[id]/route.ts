@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { parseAnimalExtras } from '@/lib/animal-form'
+import { requireArea } from '@/lib/api'
 import { dogs } from '@/lib/schema'
-import { put, del } from '@vercel/blob'
+import { del } from '@vercel/blob'
+import { isAllowedImage, uploadFile } from '@/lib/upload'
 import { eq } from 'drizzle-orm'
 
 function slugify(name: string) {
@@ -15,10 +18,10 @@ function isVercelBlob(url?: string | null) {
 function getUploadFiles(formData: FormData): File[] {
   const files: File[] = []
   for (const f of formData.getAll('photos')) {
-    if (f instanceof File && f.size > 0) files.push(f)
+    if (f instanceof File && isAllowedImage(f)) files.push(f)
   }
   const legacy = formData.get('photo')
-  if (legacy instanceof File && legacy.size > 0) files.push(legacy)
+  if (legacy instanceof File && isAllowedImage(legacy)) files.push(legacy)
   return files
 }
 
@@ -33,6 +36,8 @@ function parseExistingImages(formData: FormData): string[] {
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('animais')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const dogId = parseInt(id)
   const formData = await req.formData()
@@ -45,6 +50,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const observations = (formData.get('observations') as string) || null
   const color = (formData.get('color') as string) || '#F97316'
   const available = formData.get('available') !== 'false'
+  const extras = parseAnimalExtras(formData)
+  if (!name?.trim() || !age?.trim()) {
+    return NextResponse.json({ error: 'Nome e idade são obrigatórios' }, { status: 400 })
+  }
 
   const db = getDb()
 
@@ -61,9 +70,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const uploadedUrls: string[] = []
   for (const file of getUploadFiles(formData)) {
     const ext = file.name.split('.').pop()
-    const { url } = await put(`dogs/${slugify(name)}-${Date.now()}-${uploadedUrls.length}.${ext}`, file, {
-      access: 'public',
-    })
+    const url = await uploadFile(`dogs/${slugify(name)}-${Date.now()}-${uploadedUrls.length}.${ext}`, file)
     uploadedUrls.push(url)
   }
 
@@ -74,7 +81,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const [updated] = await db
     .update(dogs)
-    .set({ name, breed, age, weight, description, observations, imageUrl, images, color, available })
+    .set({ name, breed, age, weight, description, observations, imageUrl, images, color, available, ...extras })
     .where(eq(dogs.id, dogId))
     .returning()
 
@@ -91,6 +98,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireArea('animais')
+  if (auth instanceof Response) return auth
   const { id } = await params
   const dogId = parseInt(id)
   const db = getDb()

@@ -5,12 +5,14 @@ import { ChevronLeft, ChevronRight, Weight, Calendar, PawPrint, X } from "lucide
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { Dog } from "@/lib/schema"
+import { AdoptionForm } from "@/components/adoption-form"
 
 interface DogDetailModalProps {
   dog: Dog | null
@@ -19,6 +21,12 @@ interface DogDetailModalProps {
 }
 
 export default function DogDetailModal({ dog, open, onClose }: DogDetailModalProps) {
+  const [showForm, setShowForm] = useState(false)
+  const [formFor, setFormFor] = useState<number | null>(null)
+  if (dog && formFor !== dog.id) {
+    setFormFor(dog.id)
+    setShowForm(false)
+  }
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   if (!dog) return null
@@ -122,6 +130,9 @@ export default function DogDetailModal({ dog, open, onClose }: DogDetailModalPro
                 <DialogTitle className="text-2xl font-bold text-foreground leading-tight">
                   {dog.name}
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Detalhes de {dog.name} para adoção
+                </DialogDescription>
                 <p className="text-muted-foreground mt-0.5">{dog.breed}</p>
               </div>
               <Badge
@@ -194,22 +205,35 @@ export default function DogDetailModal({ dog, open, onClose }: DogDetailModalPro
               </div>
             )}
 
-            {/* CTA */}
-            <Button
-              asChild
-              className="w-full font-semibold py-6 text-base rounded-xl"
-              style={{ backgroundColor: dog.color, borderColor: dog.color }}
-            >
-              <a
-                href={`https://wa.me/5532999611971?text=${encodeURIComponent(
-                  `Olá! Vi o(a) ${dog.name} no site e tenho interesse em adotar. Pode me contar mais? 🐾`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Quero Adotar {dog.name}! 🐾
-              </a>
-            </Button>
+            {/* CTA: formulário de adoção (vai para o CRM) ou WhatsApp */}
+            {showForm ? (
+              <div className="rounded-xl border border-border p-4">
+                <h3 className="mb-3 font-semibold text-foreground">Quero adotar {dog.name}</h3>
+                <AdoptionForm animalId={dog.id} animalName={dog.name} />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className="w-full rounded-xl py-6 text-base font-semibold"
+                  style={{ backgroundColor: dog.color, borderColor: dog.color }}
+                >
+                  Quero Adotar {dog.name}! 🐾
+                </Button>
+                <Button asChild variant="outline" className="w-full rounded-xl">
+                  <a
+                    href={`https://wa.me/5532999611971?text=${encodeURIComponent(
+                      `Olá! Vi o(a) ${dog.name} no site e tenho interesse em adotar. Pode me contar mais? 🐾`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Prefiro conversar pelo WhatsApp
+                  </a>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

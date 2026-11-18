@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "teste/**"]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ong
+          POSTGRES_PASSWORD: ong
+          POSTGRES_DB: ong
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ong" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ong:ong@localhost:5433/ong
+      SESSION_SECRET: segredo-apenas-para-o-ci-0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tipos
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Testes
+        run: npm test
+      - name: Migrações (banco limpo)
+        run: npm run db:migrate
+      - name: Build
+        run: npm run build
+      - name: Dados de demonstração (seed)
+        run: npm run db:seed
+      - name: Subir a aplicação
+        run: nohup npm start > /tmp/next.log 2>&1 &
+      - name: Esperar /api/health (até 60 s)
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "Aplicação respondendo após ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Aplicação não respondeu em 60s. Log:"
+          cat /tmp/next.log
+          exit 1
+      - name: Teste de ponta a ponta
+        run: npm run test:e2e
+      - name: Log do servidor (em caso de falha)
+        if: failure()
+        run: cat /tmp/next.log || true

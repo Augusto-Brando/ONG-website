@@ -37,7 +37,7 @@ export default function ContactSection() {
                   href="https://wa.me/5532999611971"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition"
+                  className="inline-flex min-h-6 items-center py-1 text-muted-foreground hover:text-primary transition"
                 >
                   +55 32 99961-1971
                 </a>
@@ -52,7 +52,7 @@ export default function ContactSection() {
                 <h3 className="font-semibold text-foreground mb-1">Email</h3>
                 <a
                   href="mailto:amornaotemracajf@gmail.com"
-                  className="text-muted-foreground hover:text-primary transition"
+                  className="inline-flex min-h-6 items-center py-1 text-muted-foreground hover:text-primary transition"
                 >
                   amornaotemracajf@gmail.com
                 </a>
@@ -69,7 +69,7 @@ export default function ContactSection() {
                   href="https://www.instagram.com/amornaotemracajf/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition"
+                  className="inline-flex min-h-6 items-center py-1 text-muted-foreground hover:text-primary transition"
                 >
                   @amornaotemracajf
                 </a>

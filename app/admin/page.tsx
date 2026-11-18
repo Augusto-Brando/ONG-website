@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { PawPrint, Plus, Pencil, Trash2, LogOut, X, Check, Newspaper, BarChart3 } from 'lucide-react'
+import { PawPrint, Plus, Pencil, Trash2, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DogFormDialog, emptyDogForm } from '@/components/admin/dog-form-dialog'
 import { toast } from 'sonner'
+import { AdminShell } from '@/components/admin/admin-shell'
+import { label } from '@/lib/format'
 import type { Dog } from '@/lib/schema'
 
 function buildImageList(dog: Dog): string[] {
@@ -17,7 +17,6 @@ function buildImageList(dog: Dog): string[] {
 }
 
 export default function AdminPage() {
-  const router = useRouter()
   const [dogs, setDogs] = useState<Dog[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
@@ -57,6 +56,12 @@ export default function AdminPage() {
       color: dog.color,
       available: dog.available,
       imageUrl: dog.imageUrl,
+      species: dog.species,
+      sex: dog.sex,
+      status: dog.status,
+      castrated: dog.castrated,
+      vaccinated: dog.vaccinated,
+      rescuedAt: dog.rescuedAt ?? '',
     })
     setExistingImages(buildImageList(dog))
     setNewPhotos([])
@@ -126,51 +131,16 @@ export default function AdminPage() {
     setDeleteId(null)
   }
 
-  async function handleLogout() {
-    await fetch('/api/auth', { method: 'DELETE' })
-    router.push('/admin/login')
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background/95 sticky top-0 z-10">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
-            <img src="/logo.jpeg" alt="Amor não tem Raça" className="h-10 w-auto object-contain" />
-            <div>
-              <p className="font-bold text-primary leading-none">Admin</p>
-              <p className="text-xs text-muted-foreground">Amor não tem Raça</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button asChild variant="outline" size="sm" className="gap-2">
-              <Link href="/admin/news">
-                <Newspaper className="w-4 h-4" /> <span className="hidden sm:inline">Notícias</span>
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="gap-2">
-              <Link href="/admin/reports">
-                <BarChart3 className="w-4 h-4" /> <span className="hidden sm:inline">Relatórios</span>
-              </Link>
-            </Button>
-            <Button onClick={openCreate} size="sm" className="gap-2">
-              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Adicionar</span>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair">
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
-      <main className="container mx-auto px-4 md:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Animais Cadastrados</h1>
-          <p className="text-sm text-muted-foreground mt-1">{dogs.length} animal(is) no cadastro</p>
-        </div>
-
+    <AdminShell
+      title="Animais"
+      description={`${dogs.length} animal(is) no cadastro`}
+      actions={
+        <Button onClick={openCreate} size="sm" className="gap-2">
+          <Plus className="w-4 h-4" aria-hidden="true" /> Adicionar
+        </Button>
+      }
+    >
         {loading ? (
           <div className="text-center py-20 text-muted-foreground">Carregando...</div>
         ) : dogs.length === 0 ? (
@@ -202,10 +172,10 @@ export default function AdminPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold text-foreground">{dog.name}</p>
-                      <p className="text-xs text-muted-foreground">{dog.breed} · {dog.age}</p>
+                      <p className="text-xs text-muted-foreground">{label(dog.species)} · {dog.breed} · {dog.age}</p>
                     </div>
                     <Badge variant={dog.available ? 'default' : 'secondary'} className="shrink-0 text-xs">
-                      {dog.available ? 'Disponível' : 'Indisponível'}
+                      {label(dog.status)}
                     </Badge>
                   </div>
                   {dog.weight && (
@@ -228,6 +198,7 @@ export default function AdminPage() {
                           variant="destructive"
                           className="gap-1 text-xs px-2"
                           onClick={() => handleDelete(dog.id)}
+                          aria-label={`Confirmar remoção de ${dog.name}`}
                         >
                           <Check className="w-3 h-3" />
                         </Button>
@@ -236,6 +207,7 @@ export default function AdminPage() {
                           variant="ghost"
                           className="px-2"
                           onClick={() => setDeleteId(null)}
+                          aria-label="Cancelar remoção"
                         >
                           <X className="w-3 h-3" />
                         </Button>
@@ -246,6 +218,7 @@ export default function AdminPage() {
                         variant="ghost"
                         className="px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => setDeleteId(dog.id)}
+                        aria-label={`Remover ${dog.name}`}
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
@@ -256,7 +229,6 @@ export default function AdminPage() {
             ))}
           </div>
         )}
-      </main>
 
       <DogFormDialog
         open={open}
@@ -274,6 +246,6 @@ export default function AdminPage() {
         onMakeCover={makeCover}
         onRemoveNewPhoto={removeNewPhoto}
       />
-    </div>
+    </AdminShell>
   )
 }
