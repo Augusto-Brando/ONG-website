@@ -1,0 +1,50 @@
+# Migra o banco de PRODUÇÃO (Neon) com scripts/implantar-producao.mjs.
+# Só roda manualmente (Actions → "Implantar banco" → Run workflow), por quem tem acesso de escrita.
+# Precisa do secret do repositório PROD_DATABASE_URL (Settings → Secrets and variables → Actions).
+# O repositório é público: o backup em JSON NÃO é publicado como artefato (teria dados pessoais);
+# antes de rodar, crie uma branch de backup no Neon (Branches → Create branch a partir da main).
+name: Implantar banco
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacao:
+        description: 'Digite MIGRAR para confirmar que é o banco de produção'
+        required: true
+      backup_neon:
+        description: 'Criei uma branch de backup no Neon antes de rodar'
+        type: boolean
+        required: true
+        default: false
+
+concurrency:
+  group: implantar-banco
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Conferir confirmações
+        env:
+          CONFIRMACAO: ${{ inputs.confirmacao }}
+          BACKUP: ${{ inputs.backup_neon }}
+          TEM_URL: ${{ secrets.PROD_DATABASE_URL != '' }}
+        run: |
+          [ "$CONFIRMACAO" = "MIGRAR" ] || { echo "::error::Digite MIGRAR para confirmar."; exit 1; }
+          [ "$BACKUP" = "true" ] || { echo "::error::Crie a branch de backup no Neon e marque a opção."; exit 1; }
+          [ "$TEM_URL" = "true" ] || { echo "::error::Secret PROD_DATABASE_URL não cadastrado."; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Migrar banco de produção
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: npm run db:implantar -- --confirmo
