@@ -38,8 +38,12 @@ if (!args.includes('--confirmo')) fail('Passe --confirmo para executar contra o 
 const host = new URL(url).host
 console.log(`Banco: ${host}`)
 
-const ssl = /sslmode=(require|verify)/.test(url) ? { rejectUnauthorized: false } : undefined
-const client = new pg.Client({ connectionString: url.replace(/[?&]sslmode=[^&]*/, ''), ssl })
+// SSL vem do sslmode da URL; sslmode e channel_binding saem da string (o pg trata o SSL pelo objeto).
+const parsed = new URL(url)
+const ssl = /^(require|verify)/.test(parsed.searchParams.get('sslmode') ?? '') ? { rejectUnauthorized: false } : undefined
+parsed.searchParams.delete('sslmode')
+parsed.searchParams.delete('channel_binding')
+const client = new pg.Client({ connectionString: parsed.toString(), ssl })
 await client.connect().catch((e) => fail(`Falha ao conectar: ${e.message}`))
 const q = async (sql, params) => (await client.query(sql, params)).rows
 
