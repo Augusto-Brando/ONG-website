@@ -58,6 +58,13 @@ Duas opções, ambas rápidas:
 
 ### 3.3 Migrações: marcar a `0000_inicial` como aplicada
 
+> **Atalho (recomendado):** `npm run db:implantar -- --env <arquivo-com-DATABASE_URL> --confirmo` faz
+> as seções 3.2 a 3.4 de uma vez: salva os dados de todas as tabelas em `backups/producao-*.json`,
+> confere o esquema antigo, registra a `0000_inicial`, aplica as migrações pendentes, marca como
+> "indisponível" os animais que estavam fora da vitrine e confere que nada se perdeu. Para no primeiro
+> problema e pode ser rodado de novo sem efeito. O arquivo `.env` com a URL fica fora do repositório.
+> Os passos manuais abaixo continuam valendo para quem preferir o SQL Editor do Neon.
+
 O banco de produção foi criado **antes** das migrações versionadas (com `db:push`) e já possui as
 tabelas `dogs` e `news`. Se você rodar `npm run db:migrate` direto, a migração `0000_inicial` vai
 tentar criar essas tabelas de novo e falhar.
