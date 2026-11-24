@@ -30,7 +30,12 @@ Pré-requisitos do E2E: app no ar (`npm run dev` ou `npm start`) e banco com o s
 
 - `tests/format.test.ts` — `formatDate` (ISO → `DD/MM/AAAA`, `null`/`undefined` viram `—`),
   `formatMoney` (string numérica do Postgres, número, nulo), `label` (chave conhecida,
-  desconhecida, nula) e `todayIso` (formato `AAAA-MM-DD`).
+  desconhecida, nula), `todayIso` (formato `AAAA-MM-DD`), `daysSince` e `formatDaysInStage`
+  (mesmo dia, singular, plural, data futura e inválidos).
+- `tests/csv.test.ts` — `toCsv` (BOM UTF-8, separador `;`, CRLF, escape de aspas/quebras,
+  proteção contra injeção de fórmula `= + - @` e preservação de números negativos).
+- `tests/animal-form.test.ts` — `parseAnimalExtras` (regra de vitrine `disponivel`/`em_processo`,
+  preservação de `adoptedAt` em `adotado`, validação de enums, booleanos e `rescuedAt`).
 - `tests/validators.test.ts` — schemas zod de entrada: formulário público (consentimento
   obrigatório, telefone curto, honeypot preenchido, e-mail vazio aceito), doações (valor
   negativo, data em `DD/MM/AAAA`, e-mail), lançamentos (valor zero, tipo inválido),

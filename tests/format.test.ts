@@ -1,6 +1,6 @@
 // Tests para lib/format.ts
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatMoney, label, todayIso } from '../lib/format'
+import { daysSince, formatDate, formatDaysInStage, formatMoney, label, todayIso } from '../lib/format'
 
 describe('formatDate', () => {
   it("formato 'AAAA-MM-DD' vira 'DD/MM/AAAA'", () => {
@@ -55,5 +55,35 @@ describe('todayIso', () => {
   it('retorna data no formato AAAA-MM-DD', () => {
     const result = todayIso()
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})
+
+describe('daysSince e formatDaysInStage', () => {
+  const ref = new Date('2026-11-24T12:00:00Z')
+
+  it('calcula 0 dias para o mesmo dia e exibe Hoje', () => {
+    expect(daysSince('2026-11-24T08:00:00Z', ref)).toBe(0)
+    expect(formatDaysInStage('2026-11-24T08:00:00Z', ref)).toBe('Hoje')
+  })
+
+  it('retorna singular para 1 dia na etapa', () => {
+    expect(daysSince('2026-11-23T10:00:00Z', ref)).toBe(1)
+    expect(formatDaysInStage('2026-11-23T10:00:00Z', ref)).toBe('1 dia na etapa')
+  })
+
+  it('retorna plural para multiplos dias', () => {
+    expect(daysSince('2026-11-17T12:00:00Z', ref)).toBe(7)
+    expect(formatDaysInStage('2026-11-17T12:00:00Z', ref)).toBe('7 dias na etapa')
+  })
+
+  it('limita data futura a 0 dias', () => {
+    expect(daysSince('2026-11-30T12:00:00Z', ref)).toBe(0)
+    expect(formatDaysInStage('2026-11-30T12:00:00Z', ref)).toBe('Hoje')
+  })
+
+  it('retorna null e traco para valores nulos ou invalidos', () => {
+    expect(daysSince(null, ref)).toBeNull()
+    expect(daysSince('data-invalida', ref)).toBeNull()
+    expect(formatDaysInStage(undefined, ref)).toBe('—')
   })
 })
