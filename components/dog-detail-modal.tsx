@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -69,26 +68,32 @@ export default function DogDetailModal({ dog, open, onClose }: DogDetailModalPro
 
             {/* Botão fechar sobreposto */}
             <button
+              type="button"
               onClick={onClose}
-              className="absolute top-3 right-3 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+              aria-label={`Fechar detalhes de ${dog.name}`}
+              className="absolute top-3 right-3 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
 
             {/* Navegação de imagens (só aparece com múltiplas fotos) */}
             {allImages.length > 1 && (
               <>
                 <button
+                  type="button"
                   onClick={prevImage}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center transition-colors z-10"
+                  aria-label="Foto anterior"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center transition-colors z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                 </button>
                 <button
+                  type="button"
                   onClick={nextImage}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center transition-colors z-10"
+                  aria-label="Próxima foto"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center transition-colors z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-5 h-5" aria-hidden="true" />
                 </button>
 
                 {/* Contador de fotos */}
@@ -100,9 +105,12 @@ export default function DogDetailModal({ dog, open, onClose }: DogDetailModalPro
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 max-w-[85%] overflow-x-auto pb-1">
                   {allImages.map((img, idx) => (
                     <button
+                      type="button"
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                      aria-label={`Ver foto ${idx + 1} de ${allImages.length} de ${dog.name}`}
+                      aria-current={idx === currentImageIndex ? "true" : undefined}
+                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                         idx === currentImageIndex
                           ? "border-white scale-110 shadow-lg"
                           : "border-white/40 opacity-60 hover:opacity-90"

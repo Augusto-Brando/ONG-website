@@ -21,13 +21,17 @@ export function RequestCard({
 }) {
   return (
     <article className="rounded-lg border border-border bg-card p-3 shadow-sm">
-      <button
-        type="button"
-        onClick={() => onOpen(item)}
-        className="w-full rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label={`Abrir solicitação de ${item.adopter.name}`}
-      >
-        <p className="text-sm font-semibold text-foreground">{item.adopter.name}</p>
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">
+          <button
+            type="button"
+            onClick={() => onOpen(item)}
+            className="w-full rounded-md text-left hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={`Abrir solicitação de ${item.adopter.name}`}
+          >
+            {item.adopter.name}
+          </button>
+        </h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {item.animal ? item.animal.name : 'Sem animal definido'}
         </p>
@@ -37,7 +41,7 @@ export function RequestCard({
           </Badge>
           <span className="text-[11px] text-muted-foreground">{formatDate(item.createdAt)}</span>
         </div>
-      </button>
+      </div>
 
       <div className="mt-3 space-y-1">
         <Label htmlFor={`stage-${item.id}`} className="text-[11px] text-muted-foreground">

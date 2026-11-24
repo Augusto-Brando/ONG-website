@@ -41,12 +41,11 @@ function NewsCard({ item, onClick }: { item: News; onClick: () => void }) {
   })
 
   return (
-    <button
-      onClick={onClick}
-      className="group rounded-2xl overflow-hidden border border-border bg-card shadow-sm
+    <article
+      className="group relative rounded-2xl overflow-hidden border border-border bg-card shadow-sm
                  hover:shadow-md hover:-translate-y-1 transition-all duration-200
-                 h-full flex flex-col w-full text-left cursor-pointer
-                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                 h-full flex flex-col w-full text-left
+                 focus-within:ring-2 focus-within:ring-ring"
     >
       <div className="relative aspect-video overflow-hidden bg-muted">
         {item.coverImageUrl ? (
@@ -57,23 +56,32 @@ function NewsCard({ item, onClick }: { item: News; onClick: () => void }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Newspaper className="w-10 h-10 text-muted-foreground/30" />
+            <Newspaper className="w-10 h-10 text-muted-foreground/30" aria-hidden="true" />
           </div>
         )}
       </div>
 
       <div className="p-5 flex flex-col flex-1 gap-2">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Calendar className="w-3.5 h-3.5" />
+          <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{date}</span>
         </div>
-        <h3 className="font-bold text-foreground text-lg leading-tight line-clamp-2">{item.title}</h3>
+        <h3 className="font-bold text-foreground text-lg leading-tight line-clamp-2">
+          <button
+            type="button"
+            onClick={onClick}
+            aria-label={`Ler notícia: ${item.title}`}
+            className="text-left cursor-pointer focus-visible:outline-none after:absolute after:inset-0"
+          >
+            {item.title}
+          </button>
+        </h3>
         <p className="text-sm text-muted-foreground line-clamp-3 flex-1">{item.summary}</p>
-        <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+        <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary" aria-hidden="true">
           Ver mais
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </span>
       </div>
-    </button>
+    </article>
   )
 }

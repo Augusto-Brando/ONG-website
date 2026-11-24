@@ -83,7 +83,7 @@ export default function PainelPage() {
               {data.financeiro && (
                 <Card className="lg:col-span-2">
                   <CardHeader>
-                    <CardTitle className="text-base">Receitas x despesas</CardTitle>
+                    <CardTitle as="h2" className="text-base">Receitas x despesas</CardTitle>
                     <CardDescription>Últimos 6 meses</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -95,7 +95,7 @@ export default function PainelPage() {
               {data.adocoes && (
                 <Card className={data.financeiro ? '' : 'lg:col-span-3'}>
                   <CardHeader>
-                    <CardTitle className="text-base">Funil de adoções</CardTitle>
+                    <CardTitle as="h2" className="text-base">Funil de adoções</CardTitle>
                     <CardDescription>Solicitações por etapa do processo</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -111,7 +111,7 @@ export default function PainelPage() {
               {data.doacoes && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Doações por mês</CardTitle>
+                    <CardTitle as="h2" className="text-base">Doações por mês</CardTitle>
                     <CardDescription>Últimos 6 meses</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -123,7 +123,7 @@ export default function PainelPage() {
               {data.estoque && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Estoque baixo</CardTitle>
+                    <CardTitle as="h2" className="text-base">Estoque baixo</CardTitle>
                     <CardDescription>
                       {data.estoque.abaixoDoMinimo.length} de {data.estoque.itens} itens abaixo do mínimo
                     </CardDescription>
@@ -139,7 +139,7 @@ export default function PainelPage() {
           {data.tratamentos && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Próximos tratamentos</CardTitle>
+                <CardTitle as="h2" className="text-base">Próximos tratamentos</CardTitle>
                 <CardDescription>Agendamentos e retornos previstos para os próximos 30 dias</CardDescription>
               </CardHeader>
               <CardContent>

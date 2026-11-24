@@ -34,10 +34,12 @@ export default function NewsDetailModal({ item, open, onClose }: NewsDetailModal
             )}
             <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
             <button
+              type="button"
               onClick={onClose}
-              className="absolute top-3 right-3 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+              aria-label="Fechar notícia"
+              className="absolute top-3 right-3 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 

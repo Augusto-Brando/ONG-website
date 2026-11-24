@@ -243,3 +243,15 @@ Observações fora do escopo dos 14 achados, registradas sem alterar código: os
 dos dois diálogos públicos (`dog-detail-modal.tsx:70-91` — fechar, anterior, próximo e
 miniaturas, e `news-detail-modal.tsx:36`) não têm `aria-label`; é o mesmo critério 4.1.2 do A10 e
 vale incluir no redesign. Os alvos desses botões já têm 32–36 px.
+
+### 6.4 Correções complementares (A8, A14 e botões de diálogo)
+
+- **A8 (1.3.1 / 2.4.6)** `components/ui/card.tsx` e `app/admin/painel/page.tsx`: `CardTitle` passou
+  a aceitar a prop `as` (`div | h2 | h3 | h4`), e os 5 cartões de seção do painel gerencial agora
+  renderizam `<h2>` (hierarquia `h1 → h2`).
+- **A14 (1.3.1 / 2.4.6)** `components/admin/adocoes/request-card.tsx` e `components/news-section.tsx`:
+  os títulos saíram de dentro de `<button>` e viraram headings `<h3>` com o botão acessível dentro
+  do título (mantendo o cartão inteiro clicável na seção de notícias via overlay CSS).
+- **4.1.2 (diálogos públicos)** `components/dog-detail-modal.tsx` e `components/news-detail-modal.tsx`:
+  botões só com ícone (fechar, foto anterior, próxima foto e miniaturas) receberam `type="button"`,
+  `aria-label`, foco visível e `aria-hidden="true"` nos ícones decorativos.
