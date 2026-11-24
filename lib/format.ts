@@ -19,6 +19,24 @@ export function todayIso(): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
+/** Quantos dias inteiros se passaram desde a data informada (mínimo 0). */
+export function daysSince(value: string | Date | null | undefined, now: Date = new Date()): number | null {
+  if (!value) return null
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  const diffMs = now.getTime() - date.getTime()
+  return Math.max(0, Math.floor(diffMs / 86_400_000))
+}
+
+/** Rótulo legível para o tempo de permanência na etapa atual do CRM. */
+export function formatDaysInStage(value: string | Date | null | undefined, now: Date = new Date()): string {
+  const days = daysSince(value, now)
+  if (days === null) return '—'
+  if (days === 0) return 'Hoje'
+  if (days === 1) return '1 dia na etapa'
+  return `${days} dias na etapa`
+}
+
 export const STAGE_LABELS: Record<string, string> = {
   novo: 'Novo',
   triagem: 'Triagem',
