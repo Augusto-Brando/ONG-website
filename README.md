@@ -92,6 +92,17 @@ O banco de produção foi criado antes das migrações versionadas (com `db:push
 2. Marque a migração `0000_inicial` como já aplicada (ela só cria `dogs` e `news`), e então rode `npm run db:migrate` para aplicar a `0001_erp_crm`.
 3. Configure `SESSION_SECRET` e entre no painel com `ADMIN_PASSWORD` para cadastrar o primeiro administrador em `/admin/usuarios`.
 
+## Documentação
+
+- [Manual do painel](docs/manual-do-painel.md) — guia de uso para a equipe da ONG (todos os módulos e perguntas frequentes)
+- [O que falta](docs/o-que-falta.md) — checklist das próximas etapas e entrega da extensão
+- [Implantação em produção](docs/implantacao.md) — passo a passo de migração, variáveis e publicação
+- [Backup e restauração](docs/backup-e-restauracao.md) — rotina de cópia de segurança e recuperação do banco
+- [Banco de dados](docs/banco-de-dados.md) — tabelas, relacionamentos e migrações
+- [API](docs/api.md) — endpoints públicos e administrativos
+- [Testes](docs/testes.md) — suíte unitária (Vitest), ponta a ponta (E2E) e CI
+- [Acessibilidade](docs/acessibilidade.md) — auditoria WCAG 2.1 AA e correções aplicadas
+
 ## Dados atuais da ONG
 
 - Instagram: `https://www.instagram.com/amornaotemracajf/`

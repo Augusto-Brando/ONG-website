@@ -56,8 +56,8 @@ e `npx tsc --noEmit`, `npm run lint`, `npm test` e `npm run test:e2e` passam.
 
 ## 3. Ajustes pequenos já conhecidos
 
-- [ ] `docs/manual-do-painel.md`, perto da linha 524: o texto diz que a vitrine mostra **todos** os animais, o que contradiz a seção 3.4 (só "Disponível" e "Em processo de adoção"). Corrigir.
-- [ ] `tsconfig.tsbuildinfo` aparece modificado no Git: incluir no `.gitignore` e remover do repositório.
+- [x] `docs/manual-do-painel.md`, perto da linha 524: o texto diz que a vitrine mostra **todos** os animais, o que contradiz a seção 3.4 (só "Disponível" e "Em processo de adoção"). Corrigir.
+- [x] `tsconfig.tsbuildinfo` aparece modificado no Git: incluir no `.gitignore` e remover do repositório.
 - [ ] Modo escuro: o design system não define as cores. Decidir entre desenhar ou desligar de vez.
 - [ ] WhatsApp: hoje é só um link (`wa.me`). Decidir se basta ou se o plano prometia aviso automático (ver seção 7).
 
@@ -100,7 +100,7 @@ contas, um pedido de adoção de teste chega por e-mail e é apagado em seguida.
 - [ ] Evidências de impacto: sistema em produção (ou o plano de implantação aceito pela ONG), equipe treinada.
 - [ ] Contribuição de cada integrante (tabela de frentes do planejamento).
 - [ ] Apresentação final (slides + demonstração curta seguindo o roteiro usado na ONG).
-- [ ] README do repositório atualizado com execução local, links para os `docs/` e para este guia.
+- [x] README do repositório atualizado com execução local, links para os `docs/` e para este guia.
 
 ---
 

@@ -520,9 +520,7 @@ cadastro e define uma senha nova.
 ## 13. Perguntas frequentes
 
 **O animal não aparece no site. Por quê?**
-Confira se ele está cadastrado e se tem foto de capa e descrição. Atenção: na versão atual a vitrine
-mostra **todos** os animais, qualquer que seja a situação (ver seção 3.4) — se ele não aparece, é
-sinal de cadastro faltando ou de falha de conexão com o banco; avise o responsável técnico.
+Confira primeiro a **Situação** dele em Animais: a vitrine do site mostra **somente** animais com situação **Disponível** ou **Em processo de adoção** (ver seção 3.4). Animais “Em tratamento”, “Adotado” ou “Indisponível” ficam apenas no painel. Se a situação estiver correta e ele ainda não aparecer, confira se o cadastro foi salvo (com foto de capa e descrição) ou se há falha de conexão com o banco; avise o responsável técnico.
 
 **Apaguei um animal sem querer. Dá para voltar?**
 Não pela tela. O sistema tem backup do banco (veja `docs/backup-e-restauracao.md` com o responsável
