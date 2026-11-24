@@ -45,7 +45,7 @@ A fase P1 (casca com navegação lateral e login em duas colunas) já está feit
 funcionalidade, nova apresentação** — não mudar APIs, permissões (`can()` em `lib/auth.ts`) nem fluxos.
 Um responsável por tela, em paralelo.
 
-- [ ] **Painel inicial** (`app/admin/painel/`, `components/admin/painel/`): indicadores em cartões (dashboard/scorecard).
+- [x] **Painel inicial** (`app/admin/painel/`, `components/admin/painel/`): indicadores em cartões (dashboard/scorecard).
 - [x] **CRM de adoções** (`app/admin/adocoes/`, `components/admin/adocoes/`): cartão com mini foto do animal, nome, adotante e **dias na etapa**; mudar etapa pelo teclado.
 - [ ] **Listas com filtros** e formulários em diálogo, padronizadas: animais, tratamentos, estoque, doações, financeiro, voluntários, usuários, notícias, relatórios.
 

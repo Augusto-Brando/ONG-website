@@ -39,12 +39,12 @@ export function AdoptionFunnel({ porEtapa }: { porEtapa: Record<string, number> 
         return (
           <li key={item.etapa}>
             <div className="mb-1 flex items-center justify-between gap-2 text-sm">
-              <span className="text-foreground">{item.rotulo}</span>
-              <span className="font-mono font-medium tabular-nums text-muted-foreground">{item.total}</span>
+              <span className="text-[var(--ant-tinta)]">{item.rotulo}</span>
+              <span className="font-mono font-medium tabular-nums text-[var(--ant-tinta-suave)]">{item.total}</span>
             </div>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden="true">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--ant-creme)]" aria-hidden="true">
               <div
-                className={`h-full rounded-full ${encerrada ? 'bg-muted-foreground/40' : 'bg-primary'}`}
+                className={`h-full rounded-full ${encerrada ? 'bg-[var(--ant-areia-forte)]' : 'bg-[var(--ant-azul)]'}`}
                 style={{ width: `${largura}%` }}
               />
             </div>

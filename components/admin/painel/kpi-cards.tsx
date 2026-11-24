@@ -3,7 +3,7 @@
 // Cartões de indicadores do topo do painel. Cada um leva ao módulo correspondente.
 // Cartões cujo bloco veio `null` (perfil sem a área) simplesmente não aparecem.
 import Link from 'next/link'
-import { AlertTriangle, HandCoins, HeartHandshake, PawPrint, Wallet, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, HandCoins, HeartHandshake, PawPrint, Wallet, type LucideIcon } from 'lucide-react'
 import { formatMoney } from '@/lib/format'
 import type { Dashboard } from '@/app/api/dashboard/route'
 
@@ -82,18 +82,35 @@ export function KpiCards({ data }: { data: Dashboard }) {
           <li key={card.href}>
             <Link
               href={card.href}
-              className="flex h-full flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group flex h-full min-h-[124px] flex-col justify-between gap-2 rounded-xl border border-[var(--ant-areia)] bg-[var(--ant-branco)] p-4 shadow-sm transition-all hover:border-[var(--ant-azul)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <span className="flex items-center justify-between gap-2">
-                <span className="text-sm text-muted-foreground">{card.label}</span>
-                <card.icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <span className="flex items-start justify-between gap-2">
+                <span className="text-sm font-medium text-[var(--ant-tinta-suave)]">{card.label}</span>
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    card.negative
+                      ? 'bg-[var(--ant-erro-fundo)] text-[var(--ant-erro)]'
+                      : 'bg-[var(--ant-azul-suave)] text-[var(--ant-azul)]'
+                  }`}
+                  aria-hidden="true"
+                >
+                  <card.icon className="h-4 w-4" />
+                </span>
               </span>
               <span
-                className={`text-2xl font-bold ${card.negative ? 'text-destructive' : 'text-foreground'}`}
+                className={`text-2xl font-bold tracking-tight tabular-nums ${
+                  card.negative ? 'text-[var(--ant-erro)]' : 'text-[var(--ant-tinta)]'
+                }`}
               >
                 {card.value}
               </span>
-              <span className="text-xs text-muted-foreground">{card.detail}</span>
+              <span className="flex items-center justify-between gap-1 text-xs text-[var(--ant-tinta-suave)]">
+                <span className="truncate">{card.detail}</span>
+                <ArrowUpRight
+                  className="h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 text-[var(--ant-azul)]"
+                  aria-hidden="true"
+                />
+              </span>
             </Link>
           </li>
         ))}
