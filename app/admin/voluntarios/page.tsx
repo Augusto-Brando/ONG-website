@@ -1,78 +1,75 @@
 'use client'
 
-// MÓDULO DE REFERÊNCIA (tela): lista + diálogo de criar/editar + excluir.
-// Copie este padrão nas telas novas: AdminShell, fetch na API, toast, Table, Dialog.
-import { useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { HandHeart, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
+import { CarregandoLista, ErroLista, MolduraTabela, SemResultados, VazioLista } from '@/components/admin/lista/estados'
+import { BarraFiltros, CampoBusca, FiltroSelect, type Opcao } from '@/components/admin/lista/filtros'
+import { VolunteerDialog } from '@/components/admin/voluntarios/volunteer-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { correspondeBusca, correspondeFiltro, descricaoContagem, TODOS } from '@/lib/busca'
 import type { Volunteer } from '@/lib/schema'
 
-const empty = { name: '', email: '', phone: '', availability: '', skills: '', active: true, consentLgpd: false }
+const SITUACOES: Opcao[] = [
+  { value: 'ativo', label: 'Ativos' },
+  { value: 'inativo', label: 'Inativos' },
+]
 
 export default function VoluntariosPage() {
   const [rows, setRows] = useState<Volunteer[]>([])
   const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [form, setForm] = useState(empty)
-  const [saving, setSaving] = useState(false)
+  const [editing, setEditing] = useState<Volunteer | null>(null)
+  const [busca, setBusca] = useState('')
+  const [situacao, setSituacao] = useState(TODOS)
 
-  async function load() {
-    const res = await fetch('/api/volunteers')
-    if (res.ok) setRows(await res.json())
-    else toast.error('Erro ao carregar voluntários.')
-    setLoading(false)
-  }
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/volunteers')
+      if (res.ok) {
+        setRows(await res.json())
+        setErro(null)
+      } else setErro('Não foi possível carregar os voluntários.')
+    } catch {
+      setErro('Falha de conexão ao carregar os voluntários.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
+
+  const filtrando = busca.trim() !== '' || situacao !== TODOS
+
+  const filtrados = useMemo(
+    () =>
+      rows.filter(
+        (v) =>
+          correspondeFiltro(situacao, v.active ? 'ativo' : 'inativo') &&
+          correspondeBusca(busca, v.name, v.skills, v.availability),
+      ),
+    [rows, busca, situacao],
+  )
+
+  function limparFiltros() {
+    setBusca('')
+    setSituacao(TODOS)
+  }
 
   function openCreate() {
-    setEditingId(null)
-    setForm(empty)
+    setEditing(null)
     setOpen(true)
   }
 
   function openEdit(v: Volunteer) {
-    setEditingId(v.id)
-    setForm({
-      name: v.name,
-      email: v.email ?? '',
-      phone: v.phone ?? '',
-      availability: v.availability ?? '',
-      skills: v.skills ?? '',
-      active: v.active,
-      consentLgpd: v.consentLgpd,
-    })
+    setEditing(v)
     setOpen(true)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    const res = await fetch(editingId ? `/api/volunteers/${editingId}` : '/api/volunteers', {
-      method: editingId ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    setSaving(false)
-    if (res.ok) {
-      toast.success(editingId ? 'Voluntário atualizado.' : 'Voluntário cadastrado.')
-      setOpen(false)
-      load()
-    } else {
-      const data = await res.json().catch(() => ({}))
-      toast.error(data.error || 'Erro ao salvar.')
-    }
   }
 
   async function handleDelete(v: Volunteer) {
@@ -87,105 +84,94 @@ export default function VoluntariosPage() {
   return (
     <AdminShell
       title="Voluntários"
-      description={`${rows.length} voluntário(s) cadastrado(s)`}
+      description={descricaoContagem(filtrados.length, rows.length, 'voluntário', 'voluntários', filtrando)}
       actions={
         <Button onClick={openCreate} size="sm" className="gap-2">
-          <Plus className="h-4 w-4" aria-hidden="true" /> Adicionar
+          <Plus className="size-4" aria-hidden="true" /> Adicionar
         </Button>
       }
     >
       {loading ? (
-        <p className="py-20 text-center text-muted-foreground">Carregando...</p>
+        <CarregandoLista rotulo="Carregando voluntários" />
+      ) : erro && rows.length === 0 ? (
+        <ErroLista mensagem={erro} onTentar={load} />
       ) : rows.length === 0 ? (
-        <p className="py-20 text-center text-muted-foreground">Nenhum voluntário cadastrado.</p>
+        <VazioLista
+          icone={HandHeart}
+          titulo="Nenhum voluntário cadastrado"
+          descricao="Cadastre quem ajuda a ONG para a equipe ter os contatos à mão."
+          acao={
+            <Button onClick={openCreate} variant="outline" size="sm" className="gap-2">
+              <Plus className="size-4" aria-hidden="true" /> Cadastrar primeiro
+            </Button>
+          }
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Disponibilidade</TableHead>
-                <TableHead>Habilidades</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((v) => (
-                <TableRow key={v.id}>
-                  <TableCell className="font-medium">{v.name}</TableCell>
-                  <TableCell>{[v.phone, v.email].filter(Boolean).join(' · ') || '—'}</TableCell>
-                  <TableCell>{v.availability || '—'}</TableCell>
-                  <TableCell>{v.skills || '—'}</TableCell>
-                  <TableCell>
-                    <Badge variant={v.active ? 'default' : 'secondary'}>{v.active ? 'Ativo' : 'Inativo'}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(v)} aria-label={`Editar ${v.name}`}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(v)} aria-label={`Remover ${v.name}`}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <>
+          <BarraFiltros rotulo="Filtros de voluntários" ativos={filtrando} onLimpar={limparFiltros}>
+            <CampoBusca
+              id="busca-voluntarios"
+              rotulo="Buscar por nome, habilidade ou disponibilidade"
+              valor={busca}
+              onMudar={setBusca}
+              placeholder="Ex.: Ana ou passeios"
+            />
+            <FiltroSelect id="filtro-situacao-vol" rotulo="Situação" valor={situacao} onMudar={setSituacao} opcoes={SITUACOES} />
+          </BarraFiltros>
+
+          {filtrados.length === 0 ? (
+            <SemResultados onLimpar={limparFiltros} />
+          ) : (
+            <MolduraTabela rotulo="Lista de voluntários">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="hidden md:table-cell">Contato</TableHead>
+                    <TableHead className="hidden lg:table-cell">Disponibilidade</TableHead>
+                    <TableHead className="hidden lg:table-cell">Habilidades</TableHead>
+                    <TableHead className="hidden sm:table-cell">Situação</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtrados.map((v) => (
+                    <TableRow key={v.id}>
+                      <TableCell className="max-w-56 whitespace-normal">
+                        <p className="font-semibold text-(--ant-tinta)">{v.name}</p>
+                        <p className="text-xs text-(--ant-tinta-suave) md:hidden">
+                          {[v.phone, v.email].filter(Boolean).join(' · ') || 'Sem contato'}
+                        </p>
+                        <Badge variant={v.active ? 'default' : 'secondary'} className="mt-1 sm:hidden">
+                          {v.active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {[v.phone, v.email].filter(Boolean).join(' · ') || '—'}
+                      </TableCell>
+                      <TableCell className="hidden max-w-48 whitespace-normal lg:table-cell">{v.availability || '—'}</TableCell>
+                      <TableCell className="hidden max-w-48 whitespace-normal lg:table-cell">{v.skills || '—'}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant={v.active ? 'default' : 'secondary'}>{v.active ? 'Ativo' : 'Inativo'}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(v)} aria-label={`Editar ${v.name}`}>
+                          <Pencil className="size-4" aria-hidden="true" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(v)} aria-label={`Remover ${v.name}`}>
+                          <Trash2 className="size-4 text-destructive" aria-hidden="true" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </MolduraTabela>
+          )}
+        </>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Editar voluntário' : 'Novo voluntário'}</DialogTitle>
-            <DialogDescription>Dados usados apenas para contato pela equipe da ONG.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome *</Label>
-              <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="availability">Disponibilidade</Label>
-              <Input id="availability" value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })} placeholder="Ex.: sábados de manhã" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="skills">Habilidades</Label>
-              <Input id="skills" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Ex.: passeios, redes sociais" />
-            </div>
-            <div className="flex flex-wrap gap-6">
-              <div className="flex items-center gap-2">
-                <Checkbox id="active" checked={form.active} onCheckedChange={(c) => setForm({ ...form, active: c === true })} />
-                <Label htmlFor="active">Ativo</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="consent" checked={form.consentLgpd} onCheckedChange={(c) => setForm({ ...form, consentLgpd: c === true })} />
-                <Label htmlFor="consent">Autorizou o uso dos dados (LGPD)</Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Salvando...' : 'Salvar'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <VolunteerDialog open={open} onOpenChange={setOpen} volunteer={editing} onSaved={load} />
     </AdminShell>
   )
 }

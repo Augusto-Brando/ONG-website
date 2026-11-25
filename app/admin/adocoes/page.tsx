@@ -1,8 +1,6 @@
 'use client'
-
-// CRM de adoções: quadro Kanban por etapa + seção recolhida de encerradas.
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Plus, Search, X } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { NewRequestDialog } from '@/components/admin/adocoes/new-request-dialog'
@@ -12,11 +10,12 @@ import { ACTIVE_STAGES, CLOSED_STAGE_LIST, SOURCES, type RequestListItem } from 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { BarraFiltros, CampoBusca, FiltroSelect } from '@/components/admin/lista/filtros'
+import { TODOS } from '@/lib/busca'
 import { label, STAGE_LABELS } from '@/lib/format'
 import type { AdoptionStage } from '@/lib/schema'
+
+const SOURCE_OPTIONS = SOURCES.map((src) => ({ value: src, label: label(src) }))
 
 export default function AdocoesPage() {
   const [items, setItems] = useState<RequestListItem[]>([])
@@ -27,7 +26,7 @@ export default function AdocoesPage() {
   const [detailOpen, setDetailOpen] = useState(false)
   const [newOpen, setNewOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const [sourceFilter, setSourceFilter] = useState<string>('all')
+  const [sourceFilter, setSourceFilter] = useState<string>(TODOS)
 
   const load = useCallback(async () => {
     try {
@@ -51,12 +50,17 @@ export default function AdocoesPage() {
     load()
   }, [load])
 
-  const hasFilters = search.trim() !== '' || sourceFilter !== 'all'
+  function clearFilters() {
+    setSearch('')
+    setSourceFilter(TODOS)
+  }
+
+  const hasFilters = search.trim() !== '' || sourceFilter !== TODOS
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase()
     return items.filter((item) => {
-      if (sourceFilter !== 'all' && item.source !== sourceFilter) return false
+      if (sourceFilter !== TODOS && item.source !== sourceFilter) return false
       if (!q) return true
       const adopterMatch = item.adopter.name.toLowerCase().includes(q)
       const animalMatch = (item.animal?.name ?? '').toLowerCase().includes(q)
@@ -182,60 +186,24 @@ export default function AdocoesPage() {
       ) : (
         <>
           {items.length > 0 && (
-            <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[var(--ant-areia)] bg-[var(--ant-branco)] p-3">
-              <div className="min-w-[200px] flex-1 space-y-1">
-                <Label htmlFor="busca-adocoes" className="text-xs text-[var(--ant-tinta-suave)]">
-                  Buscar por interessado ou animal
-                </Label>
-                <div className="relative">
-                  <Search
-                    className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ant-tinta-suave)]"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    id="busca-adocoes"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Ex.: Maria ou Thor"
-                    className="pl-8"
-                  />
-                </div>
-              </div>
-
-              <div className="w-full space-y-1 sm:w-44">
-                <Label htmlFor="filtro-origem" className="text-xs text-[var(--ant-tinta-suave)]">
-                  Origem
-                </Label>
-                <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                  <SelectTrigger id="filtro-origem" className="w-full">
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as origens</SelectItem>
-                    {SOURCES.map((src) => (
-                      <SelectItem key={src} value={src}>
-                        {label(src)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {hasFilters && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => {
-                    setSearch('')
-                    setSourceFilter('all')
-                  }}
-                >
-                  <X className="h-3.5 w-3.5" aria-hidden="true" />
-                  Limpar filtros
-                </Button>
-              )}
+            <div className="mb-4">
+              <BarraFiltros rotulo="Filtros de adoções" ativos={hasFilters} onLimpar={clearFilters}>
+                <CampoBusca
+                  id="busca-adocoes"
+                  rotulo="Buscar por interessado ou animal"
+                  valor={search}
+                  onMudar={setSearch}
+                  placeholder="Ex.: Maria ou Thor"
+                />
+                <FiltroSelect
+                  id="filtro-origem"
+                  rotulo="Origem"
+                  valor={sourceFilter}
+                  onMudar={setSourceFilter}
+                  opcoes={SOURCE_OPTIONS}
+                  rotuloTodos="Todas as origens"
+                />
+              </BarraFiltros>
             </div>
           )}
 
@@ -249,15 +217,7 @@ export default function AdocoesPage() {
               <p className="text-sm text-[var(--ant-tinta-suave)]">
                 Nenhuma solicitação encontrada com os filtros atuais.
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSearch('')
-                  setSourceFilter('all')
-                }}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
                 Limpar filtros
               </Button>
             </div>

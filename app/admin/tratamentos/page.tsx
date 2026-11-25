@@ -1,20 +1,24 @@
 'use client'
 
-// Tela do módulo de tratamentos veterinários.
-import { useCallback, useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Pencil, Plus, Stethoscope, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
+import { CarregandoLista, ErroLista, MolduraTabela, SemResultados, VazioLista } from '@/components/admin/lista/estados'
+import { BarraFiltros, CampoBusca, FiltroSelect, type Opcao } from '@/components/admin/lista/filtros'
 import { TreatmentDialog } from '@/components/admin/tratamentos/treatment-dialog'
 import { UpcomingList } from '@/components/admin/tratamentos/upcoming-list'
 import type { DogRow, TreatmentRow } from '@/components/admin/tratamentos/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { correspondeBusca, correspondeFiltro, descricaoContagem, TODOS } from '@/lib/busca'
 import { formatDate, formatMoney, label, todayIso } from '@/lib/format'
+
+const TIPOS: Opcao[] = ['vacina', 'vermifugo', 'castracao', 'consulta', 'medicacao', 'cirurgia', 'exame', 'outro'].map(
+  (v) => ({ value: v, label: label(v) }),
+)
+const STATUS: Opcao[] = ['agendado', 'realizado', 'cancelado'].map((v) => ({ value: v, label: label(v) }))
 
 function plusDays(iso: string, days: number): string {
   const d = new Date(iso + 'T00:00:00')
@@ -29,8 +33,11 @@ export default function TratamentosPage() {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTreatment, setEditingTreatment] = useState<TreatmentRow | null>(null)
-  const [filterAnimal, setFilterAnimal] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
+  const [erro, setErro] = useState<string | null>(null)
+  const [filterAnimal, setFilterAnimal] = useState(TODOS)
+  const [filterStatus, setFilterStatus] = useState(TODOS)
+  const [filterTipo, setFilterTipo] = useState(TODOS)
+  const [busca, setBusca] = useState('')
 
   const loadDogs = useCallback(async () => {
     const res = await fetch('/api/dogs')
@@ -42,13 +49,20 @@ export default function TratamentosPage() {
 
   const loadTreatments = useCallback(async () => {
     const params = new URLSearchParams()
-    if (filterAnimal) params.set('animalId', filterAnimal)
-    if (filterStatus) params.set('status', filterStatus)
+    if (filterAnimal !== TODOS) params.set('animalId', filterAnimal)
+    if (filterStatus !== TODOS) params.set('status', filterStatus)
     const qs = params.toString()
-    const res = await fetch(`/api/treatments${qs ? `?${qs}` : ''}`)
-    if (res.ok) setTreatments(await res.json())
-    else toast.error('Erro ao carregar tratamentos.')
-    setLoading(false)
+    try {
+      const res = await fetch(`/api/treatments${qs ? `?${qs}` : ''}`)
+      if (res.ok) {
+        setTreatments(await res.json())
+        setErro(null)
+      } else setErro('Não foi possível carregar os tratamentos.')
+    } catch {
+      setErro('Falha de conexão ao carregar os tratamentos.')
+    } finally {
+      setLoading(false)
+    }
   }, [filterAnimal, filterStatus])
 
   useEffect(() => {
@@ -83,118 +97,138 @@ export default function TratamentosPage() {
   const today = todayIso()
   const limitIso = plusDays(today, 30)
 
+  const filtrando = busca.trim() !== '' || filterAnimal !== TODOS || filterStatus !== TODOS || filterTipo !== TODOS
+
+  const filtrados = useMemo(
+    () =>
+      treatments.filter(
+        (t) =>
+          correspondeFiltro(filterTipo, t.type) &&
+          correspondeBusca(busca, t.animal?.name, t.description, t.veterinarian, label(t.type)),
+      ),
+    [treatments, busca, filterTipo],
+  )
+
+  const animais: Opcao[] = useMemo(() => dogs.map((d) => ({ value: String(d.id), label: d.name })), [dogs])
+
+  function limparFiltros() {
+    setBusca('')
+    setFilterAnimal(TODOS)
+    setFilterStatus(TODOS)
+    setFilterTipo(TODOS)
+  }
+
   return (
     <AdminShell
       title="Tratamentos"
-      description={`${treatments.length} tratamento(s)`}
+      description={descricaoContagem(filtrados.length, treatments.length, 'tratamento', 'tratamentos', busca.trim() !== '' || filterTipo !== TODOS)}
       actions={
         <Button onClick={openCreate} size="sm" className="gap-2">
-          <Plus className="h-4 w-4" aria-hidden="true" /> Novo tratamento
+          <Plus className="size-4" aria-hidden="true" /> Novo tratamento
         </Button>
       }
     >
-      {loading ? (
-        <p className="py-20 text-center text-muted-foreground">Carregando...</p>
-      ) : (
-        <div className="space-y-8">
-          <UpcomingList treatments={treatments} today={today} limitIso={limitIso} />
+      <div className="space-y-6">
+        {!loading && !erro && <UpcomingList treatments={treatments} today={today} limitIso={limitIso} />}
 
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="filter-animal">Animal</Label>
-              <Select value={filterAnimal} onValueChange={setFilterAnimal}>
-                <SelectTrigger id="filter-animal" className="w-48">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {dogs.map((d) => (
-                    <SelectItem key={d.id} value={String(d.id)}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="filter-status">Status</Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger id="filter-status" className="w-40">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="agendado">Agendado</SelectItem>
-                  <SelectItem value="realizado">Realizado</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+        <BarraFiltros rotulo="Filtros de tratamentos" ativos={filtrando} onLimpar={limparFiltros}>
+          <CampoBusca
+            id="busca-tratamentos"
+            rotulo="Buscar por animal, descrição ou veterinário"
+            valor={busca}
+            onMudar={setBusca}
+            placeholder="Ex.: Thor ou V10"
+          />
+          <FiltroSelect id="filter-animal" rotulo="Animal" valor={filterAnimal} onMudar={setFilterAnimal} opcoes={animais} />
+          <FiltroSelect id="filter-tipo" rotulo="Tipo" valor={filterTipo} onMudar={setFilterTipo} opcoes={TIPOS} />
+          <FiltroSelect id="filter-status" rotulo="Status" valor={filterStatus} onMudar={setFilterStatus} opcoes={STATUS} />
+        </BarraFiltros>
 
-          {treatments.length === 0 ? (
-            <p className="py-20 text-center text-muted-foreground">Nenhum tratamento encontrado.</p>
-          ) : (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Animal</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Veterinário</TableHead>
-                    <TableHead>Custo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Próx. Data</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+        {loading ? (
+          <CarregandoLista rotulo="Carregando tratamentos" />
+        ) : erro ? (
+          <ErroLista mensagem={erro} onTentar={loadTreatments} />
+        ) : treatments.length === 0 && !filtrando ? (
+          <VazioLista
+            icone={Stethoscope}
+            titulo="Nenhum tratamento registrado"
+            descricao="Registre vacinas, consultas e castrações para acompanhar a saúde de cada animal."
+            acao={
+              <Button onClick={openCreate} variant="outline" size="sm" className="gap-2">
+                <Plus className="size-4" aria-hidden="true" /> Registrar primeiro
+              </Button>
+            }
+          />
+        ) : filtrados.length === 0 ? (
+          <SemResultados onLimpar={limparFiltros} />
+        ) : (
+          <MolduraTabela rotulo="Lista de tratamentos">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Animal</TableHead>
+                  <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                  <TableHead className="hidden xl:table-cell">Descrição</TableHead>
+                  <TableHead className="hidden xl:table-cell">Veterinário</TableHead>
+                  <TableHead className="hidden lg:table-cell">Custo</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Próx. data</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtrados.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell>{formatDate(t.date)}</TableCell>
+                    <TableCell className="max-w-48 whitespace-normal">
+                      <p className="font-semibold text-(--ant-tinta)">{t.animal?.name ?? '—'}</p>
+                      <p className="text-xs text-(--ant-tinta-suave) md:hidden">{label(t.type)}</p>
+                      <p className="line-clamp-1 text-xs text-(--ant-tinta-suave) xl:hidden">{t.description}</p>
+                      <Badge
+                        variant={t.status === 'realizado' ? 'default' : t.status === 'agendado' ? 'secondary' : 'outline'}
+                        className="mt-1 sm:hidden"
+                      >
+                        {label(t.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{label(t.type)}</TableCell>
+                    <TableCell className="hidden max-w-56 whitespace-normal xl:table-cell">{t.description || '—'}</TableCell>
+                    <TableCell className="hidden xl:table-cell">{t.veterinarian || '—'}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{t.cost ? formatMoney(t.cost) : '—'}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Badge
+                        variant={t.status === 'realizado' ? 'default' : t.status === 'agendado' ? 'secondary' : 'outline'}
+                      >
+                        {label(t.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">{formatDate(t.nextDate)}</TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEdit(t)}
+                        aria-label={`Editar tratamento de ${t.animal?.name ?? ''}`}
+                      >
+                        <Pencil className="size-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(t)}
+                        aria-label={`Remover tratamento de ${t.animal?.name ?? ''}`}
+                      >
+                        <Trash2 className="size-4 text-destructive" aria-hidden="true" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {treatments.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell>{formatDate(t.date)}</TableCell>
-                      <TableCell className="font-medium">{t.animal?.name ?? '—'}</TableCell>
-                      <TableCell>{label(t.type)}</TableCell>
-                      <TableCell>{t.description || '—'}</TableCell>
-                      <TableCell>{t.veterinarian || '—'}</TableCell>
-                      <TableCell>{t.cost ? formatMoney(t.cost) : '—'}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            t.status === 'realizado' ? 'default' : t.status === 'agendado' ? 'secondary' : 'outline'
-                          }
-                        >
-                          {label(t.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(t.nextDate)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEdit(t)}
-                          aria-label={`Editar tratamento de ${t.animal?.name ?? ''}`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(t)}
-                          aria-label={`Remover tratamento de ${t.animal?.name ?? ''}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      )}
+                ))}
+              </TableBody>
+            </Table>
+          </MolduraTabela>
+        )}
+      </div>
 
       <TreatmentDialog
         open={dialogOpen}

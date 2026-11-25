@@ -47,7 +47,8 @@ Um responsável por tela, em paralelo.
 
 - [x] **Painel inicial** (`app/admin/painel/`, `components/admin/painel/`): indicadores em cartões (dashboard/scorecard).
 - [x] **CRM de adoções** (`app/admin/adocoes/`, `components/admin/adocoes/`): cartão com mini foto do animal, nome, adotante e **dias na etapa**; mudar etapa pelo teclado.
-- [ ] **Listas com filtros** e formulários em diálogo, padronizadas: animais, tratamentos, estoque, doações, financeiro, voluntários, usuários, notícias, relatórios.
+- [x] **Listas com filtros** e formulários em diálogo, padronizadas: animais, tratamentos, estoque, doações, financeiro, voluntários, usuários, notícias, relatórios.
+  Base comum em `components/admin/lista/` (barra de filtros, busca sem acento, estados de carregando, vazio, erro e "nada encontrado") e `lib/busca.ts` (com testes). Diálogos de voluntários, usuários e notícias saíram das páginas.
 
 **Pronto quando:** cada tela abre (200) para os três perfis, sem rolagem horizontal em 1440 px e 390 px,
 e `npx tsc --noEmit`, `npm run lint`, `npm test` e `npm run test:e2e` passam.

@@ -1,6 +1,5 @@
 'use client'
 
-// Doações recebidas por mês (últimos 6 meses).
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart'
 import { formatMoney } from '@/lib/format'
@@ -35,23 +34,25 @@ export function DonationsChart({ data }: { data: DoacoesPorMes }) {
         </BarChart>
       </ChartContainer>
 
-      <table className="sr-only">
-        <caption>Doações recebidas por mês</caption>
-        <thead>
-          <tr>
-            <th scope="col">Mês</th>
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((mes) => (
-            <tr key={mes.mes}>
-              <th scope="row">{monthLongLabel(mes.mes)}</th>
-              <td>{formatMoney(mes.total)}</td>
+      <div className="sr-only">
+        <table>
+          <caption>Doações recebidas por mês</caption>
+          <thead>
+            <tr>
+              <th scope="col">Mês</th>
+              <th scope="col">Total</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((mes) => (
+              <tr key={mes.mes}>
+                <th scope="row">{monthLongLabel(mes.mes)}</th>
+                <td>{formatMoney(mes.total)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

@@ -1,24 +1,22 @@
 'use client'
 
-// Tela Financeiro: cartões do período, filtros, tabela e diálogo de lançamentos.
-import { useCallback, useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Plus, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { SummaryCards } from '@/components/admin/financeiro/summary-cards'
 import { TransactionDialog } from '@/components/admin/financeiro/transaction-dialog'
 import { TransactionTable } from '@/components/admin/financeiro/transaction-table'
 import type { TransactionRow, TransactionsSummary } from '@/components/admin/financeiro/types'
+import { CarregandoLista, ErroLista, SemResultados, VazioLista } from '@/components/admin/lista/estados'
+import { BarraFiltros, CampoBusca, FiltroData, FiltroSelect, type Opcao } from '@/components/admin/lista/filtros'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { correspondeBusca, descricaoContagem, TODOS } from '@/lib/busca'
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-/** Intervalo padrão: mês atual. */
 function currentMonth() {
   const now = new Date()
   const year = now.getFullYear()
@@ -29,8 +27,15 @@ function currentMonth() {
 
 const emptySummary: TransactionsSummary = { receitas: 0, despesas: 0, saldo: 0 }
 
+const TIPOS: Opcao[] = [
+  { value: 'receita', label: 'Receita' },
+  { value: 'despesa', label: 'Despesa' },
+]
+
 export default function FinanceiroPage() {
-  const [filters, setFilters] = useState({ ...currentMonth(), kind: 'todos' })
+  const [filters, setFilters] = useState({ ...currentMonth(), kind: TODOS })
+  const [busca, setBusca] = useState('')
+  const [erro, setErro] = useState<string | null>(null)
   const [rows, setRows] = useState<TransactionRow[]>([])
   const [summary, setSummary] = useState<TransactionsSummary>(emptySummary)
   const [loading, setLoading] = useState(true)
@@ -42,18 +47,19 @@ export default function FinanceiroPage() {
     const params = new URLSearchParams()
     if (current.from) params.set('from', current.from)
     if (current.to) params.set('to', current.to)
-    if (current.kind && current.kind !== 'todos') params.set('kind', current.kind)
+    if (current.kind && current.kind !== TODOS) params.set('kind', current.kind)
     try {
       const res = await fetch(`/api/transactions?${params.toString()}`)
       if (!res.ok) {
-        toast.error('Erro ao carregar os lançamentos.')
+        setErro('Não foi possível carregar os lançamentos.')
         return
       }
+      setErro(null)
       const data = await res.json()
       setRows(Array.isArray(data.items) ? data.items : [])
       setSummary(data.summary ?? emptySummary)
     } catch {
-      toast.error('Erro de conexão ao carregar os lançamentos.')
+      setErro('Falha de conexão ao carregar os lançamentos.')
     } finally {
       setLoading(false)
     }
@@ -85,69 +91,87 @@ export default function FinanceiroPage() {
     }
   }
 
+  const padrao = currentMonth()
+  const periodoInvalido = Boolean(filters.from && filters.to && filters.from > filters.to)
+  const filtrando =
+    busca.trim() !== '' || filters.kind !== TODOS || filters.from !== padrao.from || filters.to !== padrao.to
+
+  const filtrados = useMemo(
+    () => rows.filter((r) => correspondeBusca(busca, r.description, r.category)),
+    [rows, busca],
+  )
+
+  function limparFiltros() {
+    setFilters({ ...currentMonth(), kind: TODOS })
+    setBusca('')
+  }
+
   return (
     <AdminShell
       title="Financeiro"
-      description={`${rows.length} lançamento(s) no período selecionado`}
+      description={`${descricaoContagem(filtrados.length, rows.length, 'lançamento', 'lançamentos', busca.trim() !== '')} no período selecionado`}
       actions={
         <Button onClick={openCreate} size="sm" className="gap-2">
-          <Plus className="h-4 w-4" aria-hidden="true" /> Novo lançamento
+          <Plus className="size-4" aria-hidden="true" /> Novo lançamento
         </Button>
       }
     >
       <div className="space-y-6">
         <SummaryCards summary={summary} />
 
-        <section
-          aria-label="Filtros do financeiro"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="from">De</Label>
-            <Input
-              id="from"
-              type="date"
-              value={filters.from}
-              onChange={(e) => setFilters({ ...filters, from: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="to">Até</Label>
-            <Input
-              id="to"
-              type="date"
-              value={filters.to}
-              onChange={(e) => setFilters({ ...filters, to: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="kind-filter">Tipo</Label>
-            <Select
-              value={filters.kind}
-              onValueChange={(v) => setFilters({ ...filters, kind: v })}
-            >
-              <SelectTrigger id="kind-filter" className="w-full">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="receita">Receita</SelectItem>
-                <SelectItem value="despesa">Despesa</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => setFilters({ ...currentMonth(), kind: 'todos' })}
-            >
-              Limpar
-            </Button>
-          </div>
-        </section>
+        <BarraFiltros rotulo="Filtros do financeiro" ativos={filtrando} onLimpar={limparFiltros}>
+          <CampoBusca
+            id="busca-financeiro"
+            rotulo="Buscar por descrição ou categoria"
+            valor={busca}
+            onMudar={setBusca}
+            placeholder="Ex.: veterinário"
+          />
+          <FiltroData
+            id="from"
+            rotulo="De"
+            valor={filters.from}
+            max={filters.to}
+            invalido={periodoInvalido}
+            onMudar={(v) => setFilters({ ...filters, from: v })}
+          />
+          <FiltroData
+            id="to"
+            rotulo="Até"
+            valor={filters.to}
+            min={filters.from}
+            invalido={periodoInvalido}
+            onMudar={(v) => setFilters({ ...filters, to: v })}
+          />
+          <FiltroSelect
+            id="kind-filter"
+            rotulo="Tipo"
+            valor={filters.kind}
+            onMudar={(v) => setFilters({ ...filters, kind: v })}
+            opcoes={TIPOS}
+          />
+        </BarraFiltros>
+        {periodoInvalido && (
+          <p role="alert" className="text-sm text-(--ant-erro-texto-forte)">
+            A data inicial não pode ser depois da data final.
+          </p>
+        )}
 
-        <TransactionTable rows={rows} loading={loading} onEdit={openEdit} onDelete={handleDelete} />
+        {loading ? (
+          <CarregandoLista rotulo="Carregando lançamentos" />
+        ) : erro ? (
+          <ErroLista mensagem={erro} onTentar={() => load(filters)} />
+        ) : rows.length === 0 && busca.trim() === '' ? (
+          <VazioLista
+            icone={Wallet}
+            titulo="Nenhum lançamento no período"
+            descricao="Troque as datas acima ou registre um lançamento novo. Doações confirmadas e tratamentos com custo entram sozinhos."
+          />
+        ) : filtrados.length === 0 ? (
+          <SemResultados onLimpar={limparFiltros} />
+        ) : (
+          <TransactionTable rows={filtrados} onEdit={openEdit} onDelete={handleDelete} />
+        )}
       </div>
 
       <TransactionDialog

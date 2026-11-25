@@ -1,29 +1,30 @@
 'use client'
 
-// Tela Doações: tabela de doações (filtros por período e tipo) e cartões de campanhas.
-import { useCallback, useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { HandCoins, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { CampaignCards } from '@/components/admin/doacoes/campaign-cards'
 import { CampaignDialog } from '@/components/admin/doacoes/campaign-dialog'
 import { DonationDialog } from '@/components/admin/doacoes/donation-dialog'
-import { DonationTable } from '@/components/admin/doacoes/donation-table'
+import { DonationTable, donorName } from '@/components/admin/doacoes/donation-table'
 import { PendingPix } from '@/components/admin/doacoes/pending-pix'
 import { DONATION_TYPES, type CampaignRow, type DonationRow } from '@/components/admin/doacoes/types'
+import { CarregandoLista, ErroLista, SemResultados, VazioLista } from '@/components/admin/lista/estados'
+import { BarraFiltros, CampoBusca, FiltroData, FiltroSelect } from '@/components/admin/lista/filtros'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { correspondeBusca, descricaoContagem, TODOS } from '@/lib/busca'
 
 type Filters = { from: string; to: string; type: string }
 
-const emptyFilters: Filters = { from: '', to: '', type: 'todos' }
+const emptyFilters: Filters = { from: '', to: '', type: TODOS }
 
 export default function DoacoesPage() {
   const [tab, setTab] = useState('doacoes')
   const [filters, setFilters] = useState<Filters>(emptyFilters)
+  const [busca, setBusca] = useState('')
+  const [erroDoacoes, setErroDoacoes] = useState<string | null>(null)
 
   const [donations, setDonations] = useState<DonationRow[]>([])
   const [pending, setPending] = useState<DonationRow[]>([])
@@ -42,22 +43,22 @@ export default function DoacoesPage() {
     const params = new URLSearchParams()
     if (current.from) params.set('from', current.from)
     if (current.to) params.set('to', current.to)
-    if (current.type && current.type !== 'todos') params.set('type', current.type)
+    if (current.type && current.type !== TODOS) params.set('type', current.type)
     try {
       const res = await fetch(`/api/donations?${params.toString()}`)
       if (!res.ok) {
-        toast.error('Erro ao carregar as doações.')
+        setErroDoacoes('Não foi possível carregar as doações.')
         return
       }
+      setErroDoacoes(null)
       const data = await res.json()
       setDonations(Array.isArray(data) ? data : [])
-      // A fila independe dos filtros de período e tipo da tabela geral.
       const allRes = params.size ? await fetch('/api/donations') : null
       if (allRes && !allRes.ok) throw new Error('Falha ao carregar a fila Pix')
       const all: DonationRow[] = allRes ? await allRes.json() : data
       setPending(all.filter(row => row.status === 'pendente'))
     } catch {
-      toast.error('Erro de conexão ao carregar as doações.')
+      setErroDoacoes('Falha de conexão ao carregar as doações.')
     } finally {
       setLoadingDonations(false)
     }
@@ -176,18 +177,32 @@ export default function DoacoesPage() {
     }
   }
 
+  const periodoInvalido = Boolean(filters.from && filters.to && filters.from > filters.to)
+  const filtrosApi = filters.from !== '' || filters.to !== '' || filters.type !== TODOS
+  const filtrando = filtrosApi || busca.trim() !== ''
+
+  const doacoesFiltradas = useMemo(
+    () => donations.filter((d) => correspondeBusca(busca, donorName(d), d.description, d.campaign?.title, d.pixTxid)),
+    [donations, busca],
+  )
+
+  function limparFiltros() {
+    setFilters(emptyFilters)
+    setBusca('')
+  }
+
   return (
     <AdminShell
       title="Doações"
-      description={`${donations.length} doação(ões) no filtro atual · ${campaigns.length} campanha(s)`}
+      description={`${descricaoContagem(doacoesFiltradas.length, donations.length, 'doação', 'doações', busca.trim() !== '')}${filtrosApi ? ' no período/tipo escolhido' : ''} · ${campaigns.length} ${campaigns.length === 1 ? 'campanha' : 'campanhas'}`}
       actions={
         tab === 'campanhas' ? (
           <Button onClick={openCreateCampaign} size="sm" className="gap-2">
-            <Plus className="h-4 w-4" aria-hidden="true" /> Nova campanha
+            <Plus className="size-4" aria-hidden="true" /> Nova campanha
           </Button>
         ) : (
           <Button onClick={openCreateDonation} size="sm" className="gap-2">
-            <Plus className="h-4 w-4" aria-hidden="true" /> Nova doação
+            <Plus className="size-4" aria-hidden="true" /> Nova doação
           </Button>
         )
       }
@@ -200,64 +215,59 @@ export default function DoacoesPage() {
         </TabsList>
 
         <TabsContent value="doacoes" className="space-y-4">
-          <section
-            aria-label="Filtros de doações"
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="from">De</Label>
-              <Input
-                id="from"
-                type="date"
-                value={filters.from}
-                onChange={(e) => setFilters({ ...filters, from: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="to">Até</Label>
-              <Input
-                id="to"
-                type="date"
-                value={filters.to}
-                onChange={(e) => setFilters({ ...filters, to: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="type-filter">Tipo</Label>
-              <Select
-                value={filters.type}
-                onValueChange={(v) => setFilters({ ...filters, type: v })}
-              >
-                <SelectTrigger id="type-filter" className="w-full">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {DONATION_TYPES.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setFilters(emptyFilters)}
-              >
-                Limpar filtros
-              </Button>
-            </div>
-          </section>
+          <BarraFiltros rotulo="Filtros de doações" ativos={filtrando} onLimpar={limparFiltros}>
+            <CampoBusca
+              id="busca-doacoes"
+              rotulo="Buscar por doador, campanha ou código Pix"
+              valor={busca}
+              onMudar={setBusca}
+              placeholder="Ex.: Maria"
+            />
+            <FiltroData
+              id="from"
+              rotulo="De"
+              valor={filters.from}
+              max={filters.to}
+              invalido={periodoInvalido}
+              onMudar={(v) => setFilters({ ...filters, from: v })}
+            />
+            <FiltroData
+              id="to"
+              rotulo="Até"
+              valor={filters.to}
+              min={filters.from}
+              invalido={periodoInvalido}
+              onMudar={(v) => setFilters({ ...filters, to: v })}
+            />
+            <FiltroSelect
+              id="type-filter"
+              rotulo="Tipo"
+              valor={filters.type}
+              onMudar={(v) => setFilters({ ...filters, type: v })}
+              opcoes={DONATION_TYPES}
+            />
+          </BarraFiltros>
+          {periodoInvalido && (
+            <p role="alert" className="text-sm text-(--ant-erro-texto-forte)">
+              A data inicial não pode ser depois da data final.
+            </p>
+          )}
 
-          <DonationTable
-            rows={donations}
-            loading={loadingDonations}
-            onEdit={openEditDonation}
-            onDelete={handleDeleteDonation}
-          />
+          {loadingDonations ? (
+            <CarregandoLista rotulo="Carregando doações" />
+          ) : erroDoacoes ? (
+            <ErroLista mensagem={erroDoacoes} onTentar={() => loadDonations(filters)} />
+          ) : donations.length === 0 && !filtrosApi ? (
+            <VazioLista
+              icone={HandCoins}
+              titulo="Nenhuma doação registrada"
+              descricao="Os Pix feitos pelo site aparecem aqui. Doações de ração, remédios e materiais entram pelo botão “Nova doação”."
+            />
+          ) : doacoesFiltradas.length === 0 ? (
+            <SemResultados onLimpar={limparFiltros} />
+          ) : (
+            <DonationTable rows={doacoesFiltradas} onEdit={openEditDonation} onDelete={handleDeleteDonation} />
+          )}
         </TabsContent>
 
         <TabsContent value="campanhas">

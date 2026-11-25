@@ -1,6 +1,5 @@
 'use client'
 
-// Receitas x despesas dos últimos 6 meses.
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import {
   ChartContainer,
@@ -49,25 +48,27 @@ export function FinanceChart({ data }: { data: FinanceiroPorMes }) {
         </BarChart>
       </ChartContainer>
 
-      <table className="sr-only">
-        <caption>Receitas e despesas por mês</caption>
-        <thead>
-          <tr>
-            <th scope="col">Mês</th>
-            <th scope="col">Receitas</th>
-            <th scope="col">Despesas</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((mes) => (
-            <tr key={mes.mes}>
-              <th scope="row">{monthLongLabel(mes.mes)}</th>
-              <td>{formatMoney(mes.receitas)}</td>
-              <td>{formatMoney(mes.despesas)}</td>
+      <div className="sr-only">
+        <table>
+          <caption>Receitas e despesas por mês</caption>
+          <thead>
+            <tr>
+              <th scope="col">Mês</th>
+              <th scope="col">Receitas</th>
+              <th scope="col">Despesas</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((mes) => (
+              <tr key={mes.mes}>
+                <th scope="row">{monthLongLabel(mes.mes)}</th>
+                <td>{formatMoney(mes.receitas)}</td>
+                <td>{formatMoney(mes.despesas)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
-// Tabela de doações: data, doador (ou "Anônimo"), tipo, valor, forma e campanha.
 import { Pencil, Trash2 } from 'lucide-react'
+import { MolduraTabela } from '@/components/admin/lista/estados'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,46 +15,32 @@ import {
 import { formatDate, formatMoney, label } from '@/lib/format'
 import { DONATION_STATUS, type DonationRow } from './types'
 
-function donorName(row: DonationRow): string {
+export function donorName(row: DonationRow): string {
   const nome = row.donorName?.trim()
   return nome && nome.length > 0 ? nome : 'Anônimo'
 }
 
 export function DonationTable({
   rows,
-  loading,
   onEdit,
   onDelete,
 }: {
   rows: DonationRow[]
-  loading: boolean
   onEdit: (row: DonationRow) => void
   onDelete: (row: DonationRow) => void
 }) {
-  if (loading) {
-    return <p className="py-20 text-center text-muted-foreground">Carregando...</p>
-  }
-
-  if (rows.length === 0) {
-    return (
-      <p className="py-20 text-center text-muted-foreground">
-        Nenhuma doação encontrada no período selecionado.
-      </p>
-    )
-  }
-
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <MolduraTabela rotulo="Lista de doações">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Data</TableHead>
             <TableHead>Doador</TableHead>
-            <TableHead>Tipo</TableHead>
+            <TableHead className="hidden md:table-cell">Tipo</TableHead>
             <TableHead className="text-right">Valor</TableHead>
-            <TableHead>Forma</TableHead>
-            <TableHead>Campanha</TableHead>
-            <TableHead>Situação</TableHead>
+            <TableHead className="hidden lg:table-cell">Forma</TableHead>
+            <TableHead className="hidden xl:table-cell">Campanha</TableHead>
+            <TableHead className="hidden sm:table-cell">Situação</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -62,44 +48,43 @@ export function DonationTable({
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell className="whitespace-nowrap">{formatDate(row.receivedAt)}</TableCell>
-              <TableCell className="font-medium">{donorName(row)}</TableCell>
-              <TableCell>
+              <TableCell className="max-w-48 whitespace-normal">
+                <p className="font-semibold text-(--ant-tinta)">{donorName(row)}</p>
+                <p className="text-xs text-(--ant-tinta-suave) md:hidden">{label(row.type)}</p>
+                <Badge variant="outline" className="mt-1 sm:hidden">
+                  {DONATION_STATUS[row.status]}
+                </Badge>
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
                 <Badge variant="outline">{label(row.type)}</Badge>
               </TableCell>
-              <TableCell className="whitespace-nowrap text-right font-medium">
+              <TableCell className="text-right font-medium whitespace-nowrap">
                 {row.amount === null ? '—' : formatMoney(row.amount)}
               </TableCell>
-              <TableCell>{label(row.method)}</TableCell>
-              <TableCell className="max-w-[220px] truncate" title={row.campaign?.title ?? undefined}>
+              <TableCell className="hidden lg:table-cell">{label(row.method)}</TableCell>
+              <TableCell className="hidden max-w-56 truncate xl:table-cell" title={row.campaign?.title ?? undefined}>
                 {row.campaign?.title || '—'}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="hidden sm:table-cell">
                 <Badge variant="outline">{DONATION_STATUS[row.status]}</Badge>
               </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(row)}
-                    aria-label={`Editar doação de ${donorName(row)}`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(row)}
-                    aria-label={`Excluir doação de ${donorName(row)}`}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
+              <TableCell className="text-right whitespace-nowrap">
+                <Button variant="ghost" size="icon" onClick={() => onEdit(row)} aria-label={`Editar doação de ${donorName(row)}`}>
+                  <Pencil className="size-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(row)}
+                  aria-label={`Excluir doação de ${donorName(row)}`}
+                >
+                  <Trash2 className="size-4 text-destructive" aria-hidden="true" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-    </div>
+    </MolduraTabela>
   )
 }

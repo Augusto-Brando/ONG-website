@@ -1,15 +1,13 @@
 'use client'
 
-// Relatórios: resumo do cadastro de animais (impressão/PDF e planilha) e
-// exportação completa das entidades em CSV, por período (área 'relatorios').
 import { useEffect, useMemo, useState } from 'react'
 import { Download, FileSpreadsheet, FileText, PawPrint, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
+import { CarregandoLista, ErroLista, MolduraTabela, VazioLista } from '@/components/admin/lista/estados'
+import { FiltroData } from '@/components/admin/lista/filtros'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -48,9 +46,9 @@ function downloadCsv(content: string) {
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <p className="text-2xl font-bold text-foreground">{value}</p>
-      <p className="text-sm text-muted-foreground">{label}</p>
+    <div className="rounded-xl border border-(--ant-areia) bg-(--ant-branco) p-4">
+      <p className="text-2xl font-bold text-(--ant-tinta)">{value}</p>
+      <p className="text-sm text-(--ant-tinta-suave)">{label}</p>
     </div>
   )
 }
@@ -68,6 +66,7 @@ function EmptyRows({ colSpan, label }: { colSpan: number; label: string }) {
 export default function AdminReportsPage() {
   const [dogs, setDogs] = useState<ReportDog[]>([])
   const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState<string | null>(null)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const report = useMemo(() => buildAdminReport(dogs), [dogs])
@@ -80,12 +79,13 @@ export default function AdminReportsPage() {
     try {
       const res = await fetch('/api/dogs')
       if (!res.ok) {
-        toast.error('Erro ao carregar dados do relatório.')
+        setErro('Não foi possível carregar os dados do relatório.')
         return
       }
       setDogs(await res.json())
+      setErro(null)
     } catch {
-      toast.error('Erro ao carregar dados do relatório.')
+      setErro('Falha de conexão ao carregar os dados do relatório.')
     } finally {
       setLoading(false)
     }
@@ -104,7 +104,6 @@ export default function AdminReportsPage() {
     if (!opened) toast.error('Não foi possível abrir a janela de impressão.')
   }
 
-  /** URL da exportação; parâmetros vazios não entram na query. */
   function exportHref(entity: ExportEntity) {
     const params = new URLSearchParams()
     if (from) params.set('from', from)
@@ -137,7 +136,7 @@ export default function AdminReportsPage() {
     >
       <div className="space-y-8">
         <section className="space-y-3">
-          <h2 className="font-semibold text-foreground">Resumo</h2>
+          <h2 className="font-semibold text-(--ant-tinta)">Resumo</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <SummaryCard label="Animais cadastrados" value={report.totalAnimals} />
             <SummaryCard label="Disponíveis para adoção" value={report.availableAnimals} />
@@ -147,40 +146,20 @@ export default function AdminReportsPage() {
 
         <section className="space-y-4">
           <div className="space-y-1">
-            <h2 className="font-semibold text-foreground">Exportar dados (CSV)</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="font-semibold text-(--ant-tinta)">Exportar dados (CSV)</h2>
+            <p className="text-sm text-(--ant-tinta-suave)">
               Escolha o período (opcional) e baixe a planilha da área. O arquivo abre no Excel e no
               LibreOffice.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="export-from">De</Label>
-              <Input
-                id="export-from"
-                type="date"
-                value={from}
-                max={to || undefined}
-                aria-invalid={periodInvalid || undefined}
-                onChange={(e) => setFrom(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="export-to">Até</Label>
-              <Input
-                id="export-to"
-                type="date"
-                value={to}
-                min={from || undefined}
-                aria-invalid={periodInvalid || undefined}
-                onChange={(e) => setTo(e.target.value)}
-              />
-            </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <FiltroData id="export-from" rotulo="De" valor={from} max={to} invalido={periodInvalid} onMudar={setFrom} />
+            <FiltroData id="export-to" rotulo="Até" valor={to} min={from} invalido={periodInvalid} onMudar={setTo} />
           </div>
 
           {periodInvalid && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-sm text-(--ant-erro-texto-forte)">
               A data inicial não pode ser depois da data final.
             </p>
           )}
@@ -215,20 +194,20 @@ export default function AdminReportsPage() {
         </section>
 
         {loading ? (
-          <div className="py-20 text-center text-muted-foreground">Carregando relatórios...</div>
+          <CarregandoLista rotulo="Carregando relatórios" linhas={3} />
+        ) : erro ? (
+          <ErroLista mensagem={erro} onTentar={fetchDogs} />
         ) : dogs.length === 0 ? (
-          <div className="space-y-4 py-20 text-center">
-            <PawPrint className="mx-auto h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
-            <p className="text-muted-foreground">Nenhum animal cadastrado para gerar relatórios.</p>
-            <Button variant="outline" size="sm" onClick={fetchDogs}>
-              Tentar novamente
-            </Button>
-          </div>
+          <VazioLista
+            icone={PawPrint}
+            titulo="Nenhum animal cadastrado"
+            descricao="O resumo e as tabelas aparecem quando houver animais no cadastro. A exportação em CSV acima já funciona."
+          />
         ) : (
           <>
             <section className="space-y-3">
-              <h2 className="font-semibold text-foreground">Quantidade de animais por categoria</h2>
-              <div className="overflow-x-auto rounded-lg border border-border bg-card">
+              <h2 className="font-semibold text-(--ant-tinta)">Quantidade de animais por categoria</h2>
+              <MolduraTabela rotulo="Animais por categoria">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -249,12 +228,12 @@ export default function AdminReportsPage() {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
+              </MolduraTabela>
             </section>
 
             <section className="space-y-3">
-              <h2 className="font-semibold text-foreground">Histórico de adoções</h2>
-              <div className="overflow-x-auto rounded-lg border border-border bg-card">
+              <h2 className="font-semibold text-(--ant-tinta)">Histórico de adoções</h2>
+              <MolduraTabela rotulo="Histórico de adoções">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -279,12 +258,12 @@ export default function AdminReportsPage() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
+              </MolduraTabela>
             </section>
 
             <section className="space-y-3">
-              <h2 className="font-semibold text-foreground">Registros de entradas e saídas</h2>
-              <div className="overflow-x-auto rounded-lg border border-border bg-card">
+              <h2 className="font-semibold text-(--ant-tinta)">Registros de entradas e saídas</h2>
+              <MolduraTabela rotulo="Entradas e saídas">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -311,7 +290,7 @@ export default function AdminReportsPage() {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
+              </MolduraTabela>
             </section>
           </>
         )}

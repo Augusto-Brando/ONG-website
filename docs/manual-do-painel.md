@@ -79,7 +79,11 @@ Painel. Isso vale também para as telas que você não vê no menu.
   **Cancelar**, no “X” ou com a tecla **Esc**.
 - **Exclusões** quase sempre pedem confirmação: ou aparece uma janela do navegador (“OK/Cancelar”),
   ou o botão de lixeira se transforma em dois botões (✔ para confirmar, ✕ para desistir).
-- **Tabelas** rolam para os lados quando têm muitas colunas.
+- **Listas** ficam em tabela, com **busca e filtros** no topo. A busca ignora acentos e maiúsculas
+  (“racao” acha “Ração”). Com algum filtro ligado, o subtítulo da tela mostra “Mostrando X de Y” e
+  aparece o botão **Limpar filtros**.
+- **No celular** algumas colunas somem e a informação principal (situação, contato, quantidade)
+  aparece embaixo do nome. Se ainda faltar espaço, a tabela rola para os lados por dentro.
 
 ---
 
@@ -128,8 +132,9 @@ em outra aba do navegador.
 
 Endereço: `/admin` (o menu chama de **Animais**).
 
-É o cadastro dos cães e gatos. Cada animal aparece em um cartão com foto, nome, espécie, raça,
-idade, situação e cor.
+É o cadastro dos cães e gatos. Cada animal é uma linha da tabela, com foto (e a bolinha de cor),
+nome, espécie, raça, idade, sexo, saúde (castrado/vacinado) e situação. No topo há a busca por
+**nome ou raça** e os filtros de **Espécie** e **Situação**.
 
 ### 3.1 Cadastrar um animal
 
@@ -145,14 +150,14 @@ idade, situação e cor.
 | Peso | não | Texto livre, por exemplo “15kg”. |
 | Descrição | sim | Personalidade e história, em 2 ou 3 frases. Aparece no site. |
 | Observações | não | Cuidados especiais, histórico de saúde. Uso interno. |
-| Cor do card | não | Quatro opções (laranja, roxo, rosa, azul). É só a bolinha de cor do cartão. |
+| Cor do card | não | Quatro opções (laranja, roxo, rosa, azul). É só a bolinha de cor sobre a foto, na lista. |
 | Espécie | não | Cão ou Gato. |
 | Sexo | não | Macho, Fêmea ou Não informado. |
 | Situação | não | Disponível, Em processo de adoção, Em tratamento, Adotado, Indisponível. |
 | Data do resgate | não | Data em que o animal chegou à ONG. |
 | Castrado / Vacinado | não | Marque as caixinhas conforme a realidade. |
 
-3. Clique em **Cadastrar**. A janela fecha e o cartão novo aparece na lista.
+3. Clique em **Cadastrar**. A janela fecha e o animal novo aparece na lista.
 
 **Fotos:** clique na área tracejada “Adicionar fotos” e escolha uma ou várias imagens do computador
 ou do celular. Formatos aceitos: JPG, PNG, WEBP, GIF e AVIF, até **8 MB** por arquivo. Passando o
@@ -161,12 +166,12 @@ remove a foto do animal.
 
 ### 3.2 Editar
 
-Clique em **Editar** no cartão do animal. A janela abre com os dados atuais; mude o que precisar e
+Clique no **lápis** na linha do animal. A janela abre com os dados atuais; mude o que precisar e
 clique em **Salvar alterações**.
 
 ### 3.3 Excluir
 
-Clique na **lixeira** do cartão. O botão vira ✔ e ✕: confirme no ✔ (ou desista no ✕). A exclusão é
+Clique na **lixeira** na linha do animal. O botão vira ✔ e ✕: confirme no ✔ (ou desista no ✕). A exclusão é
 definitiva — se o animal só saiu da ONG, prefira mudar a **Situação** para “Adotado” ou
 “Indisponível”.
 
@@ -189,8 +194,8 @@ Registra vacinas, vermífugos, castrações, consultas, medicações, cirurgias 
 
 - **Próximos tratamentos** (no topo): o que está agendado ou tem retorno previsto para os próximos
   30 dias. É o que precisa de atenção primeiro.
-- **Filtros**: por **Animal** e por **Status** (Agendado, Realizado, Cancelado). “Todos” limpa o
-  filtro.
+- **Busca e filtros**: busca por animal, descrição ou veterinário; filtros por **Animal**, **Tipo** e
+  **Status** (Agendado, Realizado, Cancelado). **Limpar filtros** volta a mostrar tudo.
 - **Tabela**: data, animal, tipo, descrição, veterinário, custo, status e próxima data.
 
 ### 4.2 Registrar um tratamento
@@ -235,7 +240,10 @@ Controla ração, medicamentos, material de higiene e limpeza, acessórios e out
 ### 5.1 A tela
 
 - **Faixa de alerta** (amarela): aparece quando há itens abaixo do mínimo e lista os nomes.
-- **Tabela**: nome, categoria, saldo, mínimo e situação (“OK” ou “Estoque baixo”).
+- **Ver só esses** (na faixa de alerta): filtra a tabela para mostrar só os itens abaixo do mínimo.
+- **Busca e filtros**: busca pelo nome do item; filtros de **Categoria** e **Situação**.
+- **Tabela**: nome, categoria, saldo, mínimo e situação (“OK” ou “Estoque baixo”). O botão
+  **Movimentar** registra entrada ou saída.
 - **Últimas movimentações**: histórico de entradas e saídas.
 
 ### 5.2 Cadastrar um item
@@ -348,8 +356,8 @@ Endereço: `/admin/doacoes`. A tela tem duas abas: **Doações** e **Campanhas**
 
 ### 7.1 Aba Doações
 
-**Filtros**: **De** e **Até** (datas), **Tipo** (Dinheiro, Ração, Medicamento, Material, Outro) e o
-botão **Limpar filtros**.
+**Busca e filtros**: busca por doador, campanha ou código do Pix; **De** e **Até** (datas), **Tipo**
+(Dinheiro, Ração, Medicamento, Material, Outro) e o botão **Limpar filtros**.
 
 **Registrar uma doação:**
 
@@ -401,7 +409,8 @@ Mostra **receitas**, **despesas** e **saldo** do período escolhido. Ao abrir, o
 ### 8.1 A tela
 
 - **Cartões**: Receitas, Despesas e Saldo do período.
-- **Filtros**: **De**, **Até**, **Tipo** (Receita/Despesa/Todos) e **Limpar** (volta ao mês atual).
+- **Busca e filtros**: busca por descrição ou categoria; **De**, **Até**, **Tipo** (Receita/Despesa/Todos)
+  e **Limpar filtros** (volta ao mês atual).
 - **Tabela** de lançamentos, com editar e excluir.
 
 ### 8.2 Lançar uma receita ou despesa
@@ -468,7 +477,8 @@ Toda exportação fica registrada na auditoria do sistema (quem exportou, o quê
 Endereço: `/admin/voluntarios`.
 
 Cadastro de quem ajuda a ONG. A tabela mostra nome, contato, disponibilidade, habilidades e situação
-(Ativo/Inativo).
+(Ativo/Inativo). No topo: busca por nome, habilidade ou disponibilidade e filtro de **Situação**.
+O lápis edita.
 
 **Cadastrar voluntário**: clique em **Adicionar** (a janela se chama *Novo voluntário*) e preencha
 **Nome** (obrigatório), **Telefone**, **E-mail**, **Disponibilidade** (ex.: “sábados de manhã”),
@@ -485,13 +495,14 @@ Endereço: `/admin/news`.
 
 As notícias cadastradas aqui aparecem na seção de notícias da página inicial do site.
 
-**Nova notícia**: clique em **Adicionar** (a janela se chama *Nova Notícia*) e preencha
+**Nova notícia**: clique em **Nova notícia** e preencha
 **Imagem de capa** (opcional, clique na área tracejada), **Título** (obrigatório),
 **Resumo** (obrigatório — é o texto curto do cartão na Home), **Conteúdo completo**, **Data de
 publicação** e o botão de visibilidade (**Ativa (visível na Home)** / **Inativa (oculta da Home)**).
 
 - **Ativa** = aparece no site. **Inativa** = fica guardada, sem aparecer.
-- O cartão mostra a situação (Ativa/Inativa) e a data.
+- A tabela mostra capa, título, resumo, data e situação (Ativa/Inativa). No topo: busca no título
+  ou resumo e filtro de **Situação**.
 - Lápis edita; lixeira exclui (com confirmação em ✔/✕).
 
 ---
@@ -501,7 +512,8 @@ publicação** e o botão de visibilidade (**Ativa (visível na Home)** / **Inat
 Endereço: `/admin/usuarios` — **só o Administrador** vê esta tela.
 
 Aqui se cria quem pode entrar no painel. A tabela mostra nome, e-mail, perfil, situação (Ativo/Inativo)
-e último acesso. O seu próprio nome aparece com “(você)”.
+e último acesso. O seu próprio nome aparece com “(você)”. No topo: busca por nome ou e-mail e filtros
+de **Perfil** e **Situação**.
 
 **Novo usuário**: **Nome**, **E-mail**, **Perfil** (Administrador, Voluntário ou Financeiro), **Senha**
 (mínimo 8 caracteres) e a caixinha **Ativo**. A descrição da janela explica o que o perfil escolhido
